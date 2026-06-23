@@ -1,0 +1,39 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+dist-ssr/
+
+# 环境变量（含敏感信息的不提交）
+.env.local
+.env.*.local
+
+# 后端代码（独立仓库，仅参考用）
+temp_backend/
+temp_frontend/
+
+# 项目文档与协作配置（不上传仓库）
+.claude/
+docs/
+
+# 日志
+*.log
+logs/
+npm-debug.log*
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
