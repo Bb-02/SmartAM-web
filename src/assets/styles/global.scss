@@ -1,0 +1,14 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: #1e293b;
+  background-color: #f1f5f9;
+}
