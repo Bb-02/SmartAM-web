@@ -4,7 +4,7 @@ import { getWorkOrderList } from '@/api/work-orders'
 import { useAuthStore } from '@/stores/auth'
 import { WO_STATUS_LABEL, WO_STATUS_TAG, PRIORITY_LABEL, PRIORITY_TAG } from '@/types/work-order'
 import type { WorkOrderItem, WorkOrderStatus } from '@/types/work-order'
-import WorkOrderDetailDrawer from './WorkOrderDetailDrawer.vue'
+import WorkOrderDetailDrawer from '@/views/engineer/WorkOrderDetailDrawer.vue'
 
 const authStore = useAuthStore()
 
@@ -15,6 +15,8 @@ const pagination = reactive({ current: 1, size: 20, total: 0 })
 
 const statusOptions = [
   { label: '全部状态', value: '' },
+  { label: '待受理', value: 'PENDING' },
+  { label: '处理中', value: 'IN_WORK' },
   { label: '已解决', value: 'RESOLVED' },
   { label: '已结单', value: 'CLOSED' },
 ]
@@ -27,10 +29,7 @@ async function fetchData() {
       size: pagination.size,
       status: searchForm.status || undefined,
     })
-    let records = res.data.records.filter((r) =>
-      r.engineerId === authStore.userId &&
-      (r.status === 'RESOLVED' || r.status === 'CLOSED')
-    )
+    let records = res.data.records.filter((r) => r.reporterId === authStore.userId)
     if (searchForm.keyword) {
       const kw = searchForm.keyword.toLowerCase()
       records = records.filter((r) => r.title.toLowerCase().includes(kw))
@@ -51,12 +50,13 @@ function formatDate(iso: string) { return iso ? iso.slice(0, 10) : '-' }
 const detailVisible = ref(false)
 const detailId = ref(0)
 function openDetail(id: number) { detailId.value = id; detailVisible.value = true }
+function onActionDone() { fetchData() }
 
 onMounted(() => { fetchData() })
 </script>
 
 <template>
-  <div class="history-view">
+  <div class="my-orders">
     <div class="search-bar">
       <el-input v-model="searchForm.keyword" placeholder="搜索标题" clearable style="width: 200px" @keyup.enter="handleSearch" />
       <el-select v-model="searchForm.status" style="width: 120px" @change="handleSearch">
@@ -73,6 +73,11 @@ onMounted(() => { fetchData() })
           <span class="table-link" @click="openDetail(row.id)">{{ row.title }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="类型" width="80">
+        <template #default="{ row }">
+          <el-tag size="small" type="warning">{{ row.type === 'REPAIR' ? '报修' : row.type }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="优先级" width="80">
         <template #default="{ row }">
           <el-tag :type="PRIORITY_TAG[row.priority] || ''" size="small">
@@ -87,7 +92,11 @@ onMounted(() => { fetchData() })
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="reporterName" label="提交人" width="100" />
+      <el-table-column prop="engineerName" label="工程师" width="100">
+        <template #default="{ row }">
+          <span>{{ row.engineerName || '—' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="提交时间" width="110">
         <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
       </el-table-column>
@@ -97,14 +106,14 @@ onMounted(() => { fetchData() })
       <el-pagination v-model:current-page="pagination.current" v-model:page-size="pagination.size" :total="pagination.total" :page-sizes="[10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handlePageChange" />
     </div>
 
-    <el-empty v-if="!loading && tableData.length === 0" description="暂无历史工单" />
+    <el-empty v-if="!loading && tableData.length === 0" description="暂无工单" />
 
-    <WorkOrderDetailDrawer v-model:visible="detailVisible" :work-order-id="detailId" />
+    <WorkOrderDetailDrawer v-model:visible="detailVisible" :work-order-id="detailId" @action-done="onActionDone" />
   </div>
 </template>
 
 <style scoped>
-.history-view { background: #fff; border-radius: 8px; padding: 24px; }
+.my-orders { background: #fff; border-radius: 8px; padding: 24px; }
 .search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .pagination-bar { display: flex; justify-content: flex-end; margin-top: 16px; }
 </style>

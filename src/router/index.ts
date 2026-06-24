@@ -69,6 +69,7 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ['EMPLOYEE'] },
       children: [
         { path: 'assets', name: 'MyAssets', component: () => import('@/views/employee/MyAssetsView.vue'), meta: { title: '我的资产' } },
+        { path: 'orders', name: 'MyWorkOrders', component: () => import('@/views/employee/MyOrdersView.vue'), meta: { title: '我的工单' } },
         { path: 'repair', name: 'CreateRepair', component: () => import('@/views/employee/CreateRepairView.vue'), meta: { title: '发起报修' } },
         { path: 'apply', name: 'CreateApply', component: () => import('@/views/employee/CreateApplyView.vue'), meta: { title: '发起申领' } },
       ],

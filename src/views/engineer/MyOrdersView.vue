@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { getWorkOrderList, resolveWorkOrder } from '@/api/work-orders'
+import { getWorkOrderList } from '@/api/work-orders'
 import { useAuthStore } from '@/stores/auth'
 import { WO_STATUS_LABEL, WO_STATUS_TAG, PRIORITY_LABEL, PRIORITY_TAG } from '@/types/work-order'
 import type { WorkOrderItem, WorkOrderStatus } from '@/types/work-order'
+import WorkOrderDetailDrawer from './WorkOrderDetailDrawer.vue'
 
 const authStore = useAuthStore()
 
@@ -44,26 +44,12 @@ function handleReset() { searchForm.keyword = ''; searchForm.status = ''; pagina
 function handleSizeChange(s: number) { pagination.size = s; pagination.current = 1; fetchData() }
 function handlePageChange(p: number) { pagination.current = p; fetchData() }
 
-async function handleResolve(row: WorkOrderItem) {
-  let resolution = ''
-  try {
-    const { value } = await ElMessageBox.prompt('请输入处理结果', '提交结果', {
-      type: 'info',
-      inputType: 'textarea',
-      inputPlaceholder: '描述处理过程和结果...',
-      inputValidator: (v: string) => v.trim() ? true : '处理结果不能为空',
-    })
-    resolution = value || ''
-  } catch { return }
-
-  try {
-    await resolveWorkOrder(row.id, resolution)
-    ElMessage.success('结果已提交')
-    fetchData()
-  } catch { /* toast */ }
-}
-
 function formatDate(iso: string) { return iso ? iso.slice(0, 10) : '-' }
+
+const detailVisible = ref(false)
+const detailId = ref(0)
+function openDetail(id: number) { detailId.value = id; detailVisible.value = true }
+function onActionDone() { fetchData() }
 
 onMounted(() => { fetchData() })
 </script>
@@ -81,7 +67,11 @@ onMounted(() => { fetchData() })
 
     <el-table :data="tableData" v-loading="loading" stripe>
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+      <el-table-column label="标题" min-width="200" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span class="table-link" @click="openDetail(row.id)">{{ row.title }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="优先级" width="80">
         <template #default="{ row }">
           <el-tag :type="PRIORITY_TAG[row.priority] || ''" size="small">
@@ -100,10 +90,9 @@ onMounted(() => { fetchData() })
       <el-table-column label="提交时间" width="110">
         <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="100" fixed="right">
+      <el-table-column label="操作" width="80" fixed="right">
         <template #default="{ row }">
-          <span v-if="row.status === 'IN_WORK'" class="table-action" @click="handleResolve(row)">提交结果</span>
-          <span v-else class="text-muted">—</span>
+          <span class="table-action" @click="openDetail(row.id)">查看详情</span>
         </template>
       </el-table-column>
     </el-table>
@@ -113,6 +102,8 @@ onMounted(() => { fetchData() })
     </div>
 
     <el-empty v-if="!loading && tableData.length === 0" description="暂无工单" />
+
+    <WorkOrderDetailDrawer v-model:visible="detailVisible" :work-order-id="detailId" @action-done="onActionDone" />
   </div>
 </template>
 
@@ -120,5 +111,4 @@ onMounted(() => { fetchData() })
 .my-orders { background: #fff; border-radius: 8px; padding: 24px; }
 .search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .pagination-bar { display: flex; justify-content: flex-end; margin-top: 16px; }
-.text-muted { color: #94a3b8; font-size: 12px; }
 </style>

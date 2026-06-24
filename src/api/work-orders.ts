@@ -31,6 +31,10 @@ export function rejectWorkOrder(id: number, remark: string): Promise<ApiResponse
   return http.post(`/work-orders/${id}/reject`, null, { params: { remark } }).then((res) => res.data)
 }
 
+export function confirmWorkOrder(id: number, rating: number): Promise<ApiResponse<null>> {
+  return http.post(`/work-orders/${id}/confirm`, { rating }).then((res) => res.data)
+}
+
 export function getWorkOrderLogs(id: number): Promise<ApiResponse<any[]>> {
   return http.get(`/work-orders/${id}/logs`).then((res) => res.data)
 }

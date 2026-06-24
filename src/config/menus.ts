@@ -27,6 +27,7 @@ const menus: Record<string, MenuItem[]> = {
   ],
   '/employee': [
     { path: '/employee/assets', title: '我的资产', icon: 'Goods' },
+    { path: '/employee/orders', title: '我的工单', icon: 'Document' },
     { path: '/employee/repair', title: '发起报修', icon: 'WarningFilled' },
     { path: '/employee/apply', title: '发起申领', icon: 'Plus' },
   ],

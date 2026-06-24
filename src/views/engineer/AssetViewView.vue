@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { getAssetList } from '@/api/assets'
-import { statusTagType, statusLabel, statusOptions, categoryOptions } from '@/types/asset'
-import type { AssetItem, AssetStatus } from '@/types/asset'
+import { statusTagType, statusLabel, statusOptions, categoryOptions, categoryLabel } from '@/types/asset'
+import type { AssetItem, AssetStatus, AssetCategory } from '@/types/asset'
 import AssetFormDrawer from '@/views/admin/AssetFormDrawer.vue'
 
 const searchForm = reactive({ keyword: '', status: '', category: '' })
@@ -66,7 +66,9 @@ onMounted(() => { fetchData() })
         </template>
       </el-table-column>
       <el-table-column prop="code" label="编号" width="150" />
-      <el-table-column prop="category" label="分类" width="100" />
+      <el-table-column label="分类" width="110">
+        <template #default="{ row }">{{ categoryLabel[row.category as AssetCategory] || row.category }}</template>
+      </el-table-column>
       <el-table-column label="状态" width="90">
         <template #default="{ row }">
           <el-tag :type="getStatus(row).type" size="small">{{ getStatus(row).label }}</el-tag>

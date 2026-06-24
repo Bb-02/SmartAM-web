@@ -43,6 +43,7 @@ const isDisabled = computed(() => props.mode === 'view')
 const form = ref({
   username: '',
   password: '',
+  confirmPassword: '',
   realName: '',
   role: '',
   regionId: undefined as number | undefined,
@@ -51,6 +52,12 @@ const form = ref({
   email: '',
   status: 1,
 })
+
+const validateConfirmPassword = (_rule: any, value: string, cb: any) => {
+  if (!value) cb(new Error('请再次输入密码'))
+  else if (value !== form.value.password) cb(new Error('两次密码不一致'))
+  else cb()
+}
 
 const rules: FormRules = {
   username: [
@@ -61,6 +68,7 @@ const rules: FormRules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, message: '密码不少于6位', trigger: 'blur' },
   ],
+  confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }],
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
   role: [{ required: true, message: '请选择角色', trigger: 'change' }],
 }
@@ -95,6 +103,7 @@ async function loadUser(id: number) {
     form.value = {
       username: u.username,
       password: '',
+      confirmPassword: '',
       realName: u.realName,
       role: u.role,
       regionId: u.regionId,
@@ -109,7 +118,7 @@ async function loadUser(id: number) {
 
 function resetForm() {
   form.value = {
-    username: '', password: '', realName: '', role: '',
+    username: '', password: '', confirmPassword: '', realName: '', role: '',
     regionId: undefined, deptId: undefined,
     phone: '', email: '', status: 1,
   }
@@ -179,6 +188,10 @@ function handleClose() {
 
       <el-form-item v-if="showPassword" label="密码" prop="password">
         <el-input v-model="form.password" type="password" show-password placeholder="不少于6位" />
+      </el-form-item>
+
+      <el-form-item v-if="showPassword" label="确认密码" prop="confirmPassword">
+        <el-input v-model="form.confirmPassword" type="password" show-password placeholder="再次输入密码" />
       </el-form-item>
 
       <el-form-item v-if="!showPassword" label="新密码">

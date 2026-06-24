@@ -26,6 +26,7 @@ const emit = defineEmits<{
 
 const authStore = useAuthStore()
 const isTenantAdmin = computed(() => authStore.role === 'ADMIN_TENANT')
+const isEmployee = computed(() => authStore.role === 'EMPLOYEE')
 
 // 下拉选项
 const regionOptions = ref<RegionItem[]>([])
@@ -88,6 +89,7 @@ watch(
 )
 
 async function loadOptions() {
+  if (isEmployee.value) return
   try {
     const [regionRes, deptRes, userRes] = await Promise.all([
       getRegionList(),
