@@ -7,8 +7,8 @@ import { getRegionList } from '@/api/regions'
 import { getDepartmentList } from '@/api/departments'
 import { getUserList } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
-import { categoryOptions, statusOptions as allStatusOptions } from '@/types/asset'
-import type { AssetItem, AssetLog } from '@/types/asset'
+import { categoryOptions, statusOptions as allStatusOptions, categoryLabel } from '@/types/asset'
+import type { AssetItem, AssetLog, AssetCategory } from '@/types/asset'
 import type { RegionItem } from '@/types/region'
 import type { DepartmentItem } from '@/types/department'
 import type { UserItem } from '@/types/user'
@@ -203,6 +203,10 @@ function handleClose() {
   emit('update:visible', false)
 }
 
+function getCategoryName(cat: string) {
+  return categoryLabel[cat as AssetCategory] || cat
+}
+
 function formatLogDate(iso: string) {
   return iso ? iso.slice(0, 16).replace('T', ' ') : '-'
 }
@@ -249,9 +253,14 @@ const logActionLabel: Record<string, string> = {
       </el-row>
 
       <el-form-item label="品类" prop="category">
-        <el-select v-model="form.category" style="width: 100%" placeholder="请选择品类">
-          <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value" />
-        </el-select>
+        <template v-if="isDisabled">
+          <el-input :model-value="getCategoryName(form.category)" disabled />
+        </template>
+        <template v-else>
+          <el-select v-model="form.category" style="width: 100%" placeholder="请选择品类">
+            <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value" />
+          </el-select>
+        </template>
       </el-form-item>
 
       <el-row :gutter="16">

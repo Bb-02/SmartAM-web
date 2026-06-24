@@ -20,6 +20,9 @@ async function fetchData() {
   finally { loading.value = false }
 }
 
+function getCategoryLabel(cat: string) {
+  return categoryLabel[cat as AssetCategory] || cat
+}
 function formatDate(iso: string) { return iso ? iso.slice(0, 10) : '-' }
 
 // 查看详情
@@ -46,7 +49,7 @@ onMounted(() => { fetchData() })
       </el-table-column>
       <el-table-column prop="code" label="编号" width="150" />
       <el-table-column label="品类" width="110">
-        <template #default="{ row }">{{ categoryLabel[row.category as AssetCategory] || row.category }}</template>
+        <template #default="{ row }">{{ getCategoryLabel(row.category) }}</template>
       </el-table-column>
       <el-table-column label="状态" width="90">
         <template #default="{ row }">

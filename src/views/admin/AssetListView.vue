@@ -69,6 +69,9 @@ function onSaved() { fetchData() }
 function getStatus(row: AssetItem) {
   return { label: statusLabel[row.status as AssetStatus] || row.status, type: statusTagType[row.status as AssetStatus] || '' }
 }
+function getCategoryLabel(cat: string) {
+  return categoryLabel[cat as AssetCategory] || cat
+}
 
 onMounted(() => { fetchData() })
 </script>
@@ -99,7 +102,7 @@ onMounted(() => { fetchData() })
       </el-table-column>
       <el-table-column prop="code" label="编号" width="150" />
       <el-table-column label="品类" width="110">
-        <template #default="{ row }">{{ categoryLabel[row.category as AssetCategory] || row.category }}</template>
+        <template #default="{ row }">{{ getCategoryLabel(row.category) }}</template>
       </el-table-column>
       <el-table-column label="状态" width="90">
         <template #default="{ row }">

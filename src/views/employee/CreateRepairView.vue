@@ -3,7 +3,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getAssetList } from '@/api/assets'
-import { createWorkOrder } from '@/api/work-orders'
+import { getWorkOrderList, createWorkOrder } from '@/api/work-orders'
 import { useAuthStore } from '@/stores/auth'
 import type { AssetItem } from '@/types/asset'
 
@@ -11,6 +11,7 @@ const authStore = useAuthStore()
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const myAssets = ref<AssetItem[]>([])
+const busyAssetIds = ref<Set<number>>(new Set())
 
 const form = reactive({
   title: '',
@@ -32,8 +33,17 @@ const priorityOptions = [
 
 async function loadMyAssets() {
   try {
-    const res = await getAssetList({ page: 1, size: 500 })
-    myAssets.value = res.data.records.filter((a) => a.userId === authStore.userId)
+    const [assetRes, orderRes] = await Promise.all([
+      getAssetList({ page: 1, size: 500 }),
+      getWorkOrderList({ page: 1, size: 500 }),
+    ])
+    myAssets.value = assetRes.data.records.filter((a) => a.userId === authStore.userId)
+    // 找出已有活跃工单的资产 ID（PENDING 或 IN_WORK）
+    busyAssetIds.value = new Set(
+      orderRes.data.records
+        .filter((o) => o.assetId && (o.status === 'PENDING' || o.status === 'IN_WORK'))
+        .map((o) => o.assetId!)
+    )
   } catch { /* ignore */ }
 }
 
@@ -78,8 +88,9 @@ onMounted(() => { loadMyAssets() })
               <el-option
                 v-for="a in myAssets"
                 :key="a.id"
-                :label="`${a.name} (${a.code})`"
+                :label="`${a.name} (${a.code})${busyAssetIds.has(a.id) ? ' — 已有工单处理中' : a.status === 'IN_REPAIR' ? ' — 维修中' : ''}`"
                 :value="a.id"
+                :disabled="busyAssetIds.has(a.id) || a.status === 'IN_REPAIR'"
               />
             </el-select>
           </el-form-item>
