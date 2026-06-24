@@ -28,6 +28,7 @@ const title = computed(() => {
 const isDisabled = computed(() => props.mode === 'view')
 
 const form = ref({ name: '', code: '' })
+const isDefaultRegion = ref(false)
 const rules: FormRules = {
   name: [{ required: true, message: '请输入分区名称', trigger: 'blur' }],
   code: [{ required: true, message: '请输入分区标识', trigger: 'blur' }],
@@ -39,12 +40,14 @@ watch(
     if (!v) return
     if (props.mode === 'create') {
       form.value = { name: '', code: '' }
+      isDefaultRegion.value = false
       formRef.value?.resetFields()
     } else if (props.regionId) {
       loading.value = true
       try {
         const r = (await getRegion(props.regionId)).data
         form.value = { name: r.name, code: r.code }
+        isDefaultRegion.value = r.isDefault === 1
       } finally { loading.value = false }
     }
   },
@@ -62,7 +65,7 @@ async function handleSubmit() {
     } else {
       await updateRegion(props.regionId!, {
         name: form.value.name || undefined,
-        code: form.value.code || undefined,
+        code: isDefaultRegion.value ? undefined : (form.value.code || undefined),
       })
       ElMessage.success('保存成功')
     }
@@ -81,7 +84,8 @@ function handleClose() { emit('update:visible', false) }
         <el-input v-model="form.name" placeholder="如 华东分区" />
       </el-form-item>
       <el-form-item label="分区标识" prop="code">
-        <el-input v-model="form.code" placeholder="唯一标识，如 east" />
+        <el-input v-model="form.code" placeholder="唯一标识，如 east" :disabled="mode === 'edit' && isDefaultRegion" />
+        <div v-if="mode === 'edit' && isDefaultRegion" style="font-size:12px;color:#94a3b8;margin-top:4px">默认分区标识不可修改</div>
       </el-form-item>
     </el-form>
 
