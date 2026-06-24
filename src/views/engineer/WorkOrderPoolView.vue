@@ -138,9 +138,9 @@ onMounted(() => { fetchData() })
     <div class="pool-left">
       <!-- 统计 -->
       <div class="pool-stats">
-        <span class="stat-item urgent">⚡ {{ urgentCount }} 紧急</span>
-        <span class="stat-item high">🔶 {{ highCount }} 高</span>
-        <span class="stat-item normal">🔵 {{ normalCount }} 普通</span>
+        <span class="stat-item urgent">{{ urgentCount }}<em>紧急</em></span>
+        <span class="stat-item high">{{ highCount }}<em>高优先</em></span>
+        <span class="stat-item normal">{{ normalCount }}<em>普通</em></span>
       </div>
 
       <!-- 搜索 -->
@@ -279,7 +279,8 @@ onMounted(() => { fetchData() })
 
 /* ===== 左侧 ===== */
 .pool-left {
-  width: 380px;
+  width: 40%;
+  min-width: 340px;
   flex-shrink: 0;
   border-right: 1px solid #e2e8f0;
   display: flex;
@@ -295,10 +296,18 @@ onMounted(() => { fetchData() })
 .stat-item {
   flex: 1;
   text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 10px 0;
   border-radius: 6px;
+  line-height: 1.2;
+}
+.stat-item em {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
 }
 .stat-item.urgent { color: #dc2626; background: #fef2f2; margin-right: 6px; }
 .stat-item.high { color: #d97706; background: #fffbeb; margin-right: 6px; }
