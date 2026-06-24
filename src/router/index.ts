@@ -8,19 +8,44 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: () => import('@/views/login/LoginView.vue'),
-      meta: { guest: true },
+      meta: { guest: true, title: '登录' },
     },
     {
       path: '/register',
       name: 'Register',
       component: () => import('@/views/register/RegisterView.vue'),
-      meta: { guest: true },
+      meta: { guest: true, title: '注册' },
     },
     {
       path: '/',
-      name: 'Dashboard',
-      component: () => import('@/views/dashboard/DashboardView.vue'),
+      component: () => import('@/layouts/MainLayout.vue'),
       meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'Dashboard',
+          component: () => import('@/views/dashboard/DashboardView.vue'),
+          meta: { title: '首页' },
+        },
+        {
+          path: 'assets',
+          name: 'Assets',
+          component: () => import('@/views/assets/AssetListView.vue'),
+          meta: { title: '资产管理' },
+        },
+        {
+          path: 'users',
+          name: 'Users',
+          component: () => import('@/views/users/UserListView.vue'),
+          meta: { title: '用户管理' },
+        },
+        {
+          path: 'tickets',
+          name: 'Tickets',
+          component: () => import('@/views/tickets/TicketListView.vue'),
+          meta: { title: '工单管理' },
+        },
+      ],
     },
   ],
 })
