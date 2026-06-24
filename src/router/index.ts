@@ -55,6 +55,8 @@ const router = createRouter({
       component: () => import('@/layouts/AppLayout.vue'),
       meta: { requiresAuth: true, roles: ['ENGINEER'] },
       children: [
+        { path: '', redirect: '/engineer/dashboard' },
+        { path: 'dashboard', name: 'EngineerDashboard', component: () => import('@/views/engineer/DashboardView.vue'), meta: { title: '工作台' } },
         { path: 'pool', name: 'WorkOrderPool', component: () => import('@/views/engineer/WorkOrderPoolView.vue'), meta: { title: '工单池' } },
         { path: 'my-orders', name: 'MyOrders', component: () => import('@/views/engineer/MyOrdersView.vue'), meta: { title: '我的工单' } },
         { path: 'assets', name: 'EngineerAssets', component: () => import('@/views/engineer/AssetViewView.vue'), meta: { title: '资产查看' } },
@@ -68,6 +70,8 @@ const router = createRouter({
       component: () => import('@/layouts/AppLayout.vue'),
       meta: { requiresAuth: true, roles: ['EMPLOYEE'] },
       children: [
+        { path: '', redirect: '/employee/dashboard' },
+        { path: 'dashboard', name: 'EmployeeDashboard', component: () => import('@/views/employee/DashboardView.vue'), meta: { title: '工作台' } },
         { path: 'assets', name: 'MyAssets', component: () => import('@/views/employee/MyAssetsView.vue'), meta: { title: '我的资产' } },
         { path: 'orders', name: 'MyWorkOrders', component: () => import('@/views/employee/MyOrdersView.vue'), meta: { title: '我的工单' } },
         { path: 'repair', name: 'CreateRepair', component: () => import('@/views/employee/CreateRepairView.vue'), meta: { title: '发起报修' } },

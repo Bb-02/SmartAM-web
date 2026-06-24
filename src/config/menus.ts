@@ -20,12 +20,14 @@ const menus: Record<string, MenuItem[]> = {
     { path: '/admin/region/tickets', title: '工单管理', icon: 'Document' },
   ],
   '/engineer': [
+    { path: '/engineer/dashboard', title: '工作台', icon: 'HomeFilled' },
     { path: '/engineer/pool', title: '工单池', icon: 'List' },
     { path: '/engineer/my-orders', title: '我的工单', icon: 'Document' },
     { path: '/engineer/assets', title: '资产查看', icon: 'Goods' },
     { path: '/engineer/history', title: '历史工单', icon: 'Clock' },
   ],
   '/employee': [
+    { path: '/employee/dashboard', title: '工作台', icon: 'HomeFilled' },
     { path: '/employee/assets', title: '我的资产', icon: 'Goods' },
     { path: '/employee/orders', title: '我的工单', icon: 'Document' },
     { path: '/employee/repair', title: '发起报修', icon: 'WarningFilled' },
@@ -45,8 +47,8 @@ export function getRoleHome(role: string): string {
   const map: Record<string, string> = {
     ADMIN_TENANT: '/admin/tenant/dashboard',
     ADMIN_REGION: '/admin/region/dashboard',
-    ENGINEER: '/engineer/pool',
-    EMPLOYEE: '/employee/assets',
+    ENGINEER: '/engineer/dashboard',
+    EMPLOYEE: '/employee/dashboard',
   }
   return map[role] || '/'
 }
