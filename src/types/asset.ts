@@ -1,13 +1,19 @@
 // ── 品类 ──
-export const ASSET_CATEGORIES = ['SERVER', 'PC', 'NETWORK', 'PRINTER', 'OTHER'] as const
+export const ASSET_CATEGORIES = [
+  'COMPUTER', 'NETWORK_SERVER', 'PERIPHERAL', 'PRINTER',
+  'TELECOM_SECURITY', 'OFFICE_FACILITY', 'OFFICE_FURNITURE', 'OTHER',
+] as const
 export type AssetCategory = (typeof ASSET_CATEGORIES)[number]
 
 export const categoryLabel: Record<AssetCategory, string> = {
-  SERVER: '服务器',
-  PC: '个人电脑',
-  NETWORK: '网络设备',
-  PRINTER: '打印机',
-  OTHER: '其他',
+  COMPUTER: '计算机设备',
+  NETWORK_SERVER: '网络与服务器',
+  PERIPHERAL: '外设与显示',
+  PRINTER: '打印设备',
+  TELECOM_SECURITY: '通讯安防',
+  OFFICE_FACILITY: '办公设施',
+  OFFICE_FURNITURE: '办公家具',
+  OTHER: '其他资产',
 }
 
 export const categoryOptions = ASSET_CATEGORIES.map((v) => ({ label: categoryLabel[v], value: v }))
