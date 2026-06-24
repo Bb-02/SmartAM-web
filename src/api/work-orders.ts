@@ -11,6 +11,22 @@ export function getWorkOrderList(params?: {
   return http.get('/work-orders', { params: { page: 1, size: 20, ...params } }).then((res) => res.data)
 }
 
+export function getWorkOrderDetail(id: number): Promise<ApiResponse<WorkOrderItem>> {
+  return http.get(`/work-orders/${id}`).then((res) => res.data)
+}
+
 export function createWorkOrder(data: WorkOrderCreateRequest): Promise<ApiResponse<WorkOrderItem>> {
   return http.post('/work-orders', data).then((res) => res.data)
+}
+
+export function claimWorkOrder(id: number): Promise<ApiResponse<null>> {
+  return http.post(`/work-orders/${id}/claim`).then((res) => res.data)
+}
+
+export function resolveWorkOrder(id: number, resolution: string): Promise<ApiResponse<null>> {
+  return http.post(`/work-orders/${id}/resolve`, { resolution }).then((res) => res.data)
+}
+
+export function getWorkOrderLogs(id: number): Promise<ApiResponse<any[]>> {
+  return http.get(`/work-orders/${id}/logs`).then((res) => res.data)
 }
