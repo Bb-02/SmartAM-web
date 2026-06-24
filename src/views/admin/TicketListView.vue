@@ -1,3 +1,133 @@
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getWorkOrderList, rejectWorkOrder } from '@/api/work-orders'
+import { WO_STATUS_LABEL, WO_STATUS_TAG, PRIORITY_LABEL, PRIORITY_TAG } from '@/types/work-order'
+import type { WorkOrderItem, WorkOrderStatus } from '@/types/work-order'
+
+const searchForm = reactive({ keyword: '', status: '', priority: '' })
+const loading = ref(false)
+const tableData = ref<WorkOrderItem[]>([])
+const pagination = reactive({ current: 1, size: 20, total: 0 })
+
+async function fetchData() {
+  loading.value = true
+  try {
+    const res = await getWorkOrderList({
+      page: pagination.current,
+      size: pagination.size,
+      status: searchForm.status || undefined,
+      priority: searchForm.priority || undefined,
+    })
+    let records = res.data.records
+    if (searchForm.keyword) {
+      const kw = searchForm.keyword.toLowerCase()
+      records = records.filter((r) => r.title.toLowerCase().includes(kw))
+    }
+    tableData.value = records
+    pagination.total = res.data.total
+  } catch { tableData.value = [] }
+  finally { loading.value = false }
+}
+
+function handleSearch() { pagination.current = 1; fetchData() }
+function handleReset() { searchForm.keyword = ''; searchForm.status = ''; searchForm.priority = ''; pagination.current = 1; fetchData() }
+function handleSizeChange(s: number) { pagination.size = s; pagination.current = 1; fetchData() }
+function handlePageChange(p: number) { pagination.current = p; fetchData() }
+
+async function handleReject(row: WorkOrderItem) {
+  let remark = ''
+  try {
+    const { value } = await ElMessageBox.prompt('请输入驳回原因', '驳回工单', {
+      type: 'warning',
+      inputPlaceholder: '如：信息不完整，请重新提交',
+      inputValidator: (v: string) => v.trim() ? true : '驳回原因不能为空',
+    })
+    remark = value || ''
+  } catch { return }
+
+  try {
+    await rejectWorkOrder(row.id, remark)
+    ElMessage.success('已驳回')
+    fetchData()
+  } catch { /* toast */ }
+}
+
+function formatDate(iso: string) { return iso ? iso.slice(0, 10) : '-' }
+
+onMounted(() => { fetchData() })
+</script>
+
 <template>
-  <div class="placeholder"><el-empty description="工单管理 — 即将开发" /></div>
+  <div class="ticket-list">
+    <div class="search-bar">
+      <el-input v-model="searchForm.keyword" placeholder="搜索标题" clearable style="width: 200px" @keyup.enter="handleSearch" />
+      <el-select v-model="searchForm.status" style="width: 120px" placeholder="全部状态" clearable @change="handleSearch">
+        <el-option label="待受理" value="PENDING" />
+        <el-option label="处理中" value="IN_WORK" />
+        <el-option label="已解决" value="RESOLVED" />
+        <el-option label="已结单" value="CLOSED" />
+      </el-select>
+      <el-select v-model="searchForm.priority" style="width: 120px" placeholder="全部优先级" clearable @change="handleSearch">
+        <el-option label="低" value="LOW" />
+        <el-option label="普通" value="NORMAL" />
+        <el-option label="高" value="HIGH" />
+        <el-option label="紧急" value="URGENT" />
+      </el-select>
+      <el-button type="primary" @click="handleSearch"><el-icon><Search /></el-icon>搜索</el-button>
+      <el-button @click="handleReset">重置</el-button>
+    </div>
+
+    <el-table :data="tableData" v-loading="loading" stripe>
+      <el-table-column type="index" label="#" width="55" />
+      <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+      <el-table-column label="类型" width="80">
+        <template #default="{ row }">
+          <el-tag size="small" type="warning">{{ row.type === 'REPAIR' ? '报修' : row.type }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="优先级" width="80">
+        <template #default="{ row }">
+          <el-tag :type="PRIORITY_TAG[row.priority] || ''" size="small">
+            {{ PRIORITY_LABEL[row.priority] || row.priority }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="90">
+        <template #default="{ row }">
+          <el-tag :type="WO_STATUS_TAG[row.status as WorkOrderStatus] || ''" size="small">
+            {{ WO_STATUS_LABEL[row.status as WorkOrderStatus] || row.status }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="reporterName" label="提交人" width="100" />
+      <el-table-column prop="engineerName" label="工程师" width="100">
+        <template #default="{ row }">
+          <span>{{ row.engineerName || '—' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="提交时间" width="110">
+        <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="80" fixed="right">
+        <template #default="{ row }">
+          <span v-if="row.status === 'PENDING'" class="table-action-danger" @click="handleReject(row)">驳回</span>
+          <span v-else class="text-muted">—</span>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <div class="pagination-bar" v-if="pagination.total > 0">
+      <el-pagination v-model:current-page="pagination.current" v-model:page-size="pagination.size" :total="pagination.total" :page-sizes="[10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handlePageChange" />
+    </div>
+
+    <el-empty v-if="!loading && tableData.length === 0" description="暂无工单" />
+  </div>
 </template>
+
+<style scoped>
+.ticket-list { background: #fff; border-radius: 8px; padding: 24px; }
+.search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.pagination-bar { display: flex; justify-content: flex-end; margin-top: 16px; }
+.text-muted { color: #94a3b8; font-size: 12px; }
+</style>

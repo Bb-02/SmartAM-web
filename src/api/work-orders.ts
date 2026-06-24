@@ -27,6 +27,10 @@ export function resolveWorkOrder(id: number, resolution: string): Promise<ApiRes
   return http.post(`/work-orders/${id}/resolve`, { resolution }).then((res) => res.data)
 }
 
+export function rejectWorkOrder(id: number, remark: string): Promise<ApiResponse<null>> {
+  return http.post(`/work-orders/${id}/reject`, null, { params: { remark } }).then((res) => res.data)
+}
+
 export function getWorkOrderLogs(id: number): Promise<ApiResponse<any[]>> {
   return http.get(`/work-orders/${id}/logs`).then((res) => res.data)
 }
