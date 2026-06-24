@@ -3,6 +3,7 @@ import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { getRoleHome } from '@/config/menus'
 
 const router = useRouter()
 const route = useRoute()
@@ -30,7 +31,7 @@ async function handleLogin() {
   loading.value = true
   try {
     await authStore.login(form)
-    const redirect = (route.query.redirect as string) || '/'
+    const redirect = (route.query.redirect as string) || getRoleHome(authStore.role)
     router.push(redirect)
   } catch {
     // 错误已在拦截器中 toast

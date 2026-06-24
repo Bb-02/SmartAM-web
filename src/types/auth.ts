@@ -10,6 +10,8 @@ export interface LoginResponseData {
   username: string
   role: string
   realName: string
+  companyName: string
+  regionName: string
 }
 
 export interface RegisterRequest {
@@ -33,4 +35,6 @@ export interface UserInfo {
   username: string
   role: string
   realName: string
+  companyName: string
+  regionName: string
 }
