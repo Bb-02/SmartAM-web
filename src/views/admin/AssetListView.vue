@@ -1,25 +1,19 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getAssetList, deleteAsset } from '@/api/assets'
+import { useAuthStore } from '@/stores/auth'
+import { statusTagType, statusLabel, statusOptions, categoryOptions } from '@/types/asset'
 import type { AssetItem, AssetStatus } from '@/types/asset'
+import AssetFormDrawer from './AssetFormDrawer.vue'
 
-const statusMap: Record<AssetStatus, { label: string; type: string }> = {
-  IN_STORAGE: { label: '在库', type: '' },
-  IN_USE: { label: '使用中', type: 'success' },
-  IN_REPAIR: { label: '维修中', type: 'warning' },
-  SCRAPPED: { label: '已报废', type: 'danger' },
-}
+const authStore = useAuthStore()
+const canDelete = computed(() => authStore.role === 'ADMIN_TENANT')
 
-const statusOptions = [
-  { label: '全部状态', value: '' },
-  { label: '在库', value: 'IN_STORAGE' },
-  { label: '使用中', value: 'IN_USE' },
-  { label: '维修中', value: 'IN_REPAIR' },
-  { label: '已报废', value: 'SCRAPPED' },
-]
+// 搜索
+const searchForm = reactive({ keyword: '', status: '', category: '' })
 
-const searchForm = reactive({ keyword: '', status: '' })
+// 表格
 const loading = ref(false)
 const tableData = ref<AssetItem[]>([])
 const pagination = reactive({ current: 1, size: 20, total: 0 })
@@ -32,6 +26,7 @@ async function fetchData() {
       size: pagination.size,
       keyword: searchForm.keyword || undefined,
       status: searchForm.status || undefined,
+      category: searchForm.category || undefined,
     })
     tableData.value = res.data.records
     pagination.total = res.data.total
@@ -43,7 +38,7 @@ async function fetchData() {
 }
 
 function handleSearch() { pagination.current = 1; fetchData() }
-function handleReset() { searchForm.keyword = ''; searchForm.status = ''; pagination.current = 1; fetchData() }
+function handleReset() { searchForm.keyword = ''; searchForm.status = ''; searchForm.category = ''; pagination.current = 1; fetchData() }
 function handleSizeChange(s: number) { pagination.size = s; pagination.current = 1; fetchData() }
 function handlePageChange(p: number) { pagination.current = p; fetchData() }
 
@@ -55,53 +50,79 @@ async function handleDelete(row: AssetItem) {
     ElMessage.success('删除成功')
     if (tableData.value.length === 1 && pagination.current > 1) pagination.current--
     fetchData()
-  } catch { /* 已 toast */ }
+  } catch { /* toast */ }
 }
 
 function formatDate(iso: string) { return iso ? iso.slice(0, 10) : '-' }
+
+// 抽屉
+const drawerVisible = ref(false)
+const drawerMode = ref<'create' | 'edit' | 'view'>('create')
+const drawerAssetId = ref<number>()
+
+function openCreate() { drawerMode.value = 'create'; drawerAssetId.value = undefined; drawerVisible.value = true }
+function openEdit(id: number) { drawerMode.value = 'edit'; drawerAssetId.value = id; drawerVisible.value = true }
+function openView(id: number) { drawerMode.value = 'view'; drawerAssetId.value = id; drawerVisible.value = true }
+
+function onSaved() { fetchData() }
+
+function getStatus(row: AssetItem) {
+  return { label: statusLabel[row.status as AssetStatus] || row.status, type: statusTagType[row.status as AssetStatus] || '' }
+}
 
 onMounted(() => { fetchData() })
 </script>
 
 <template>
   <div class="asset-list">
+    <!-- 搜索栏 -->
     <div class="search-bar">
-      <el-input v-model="searchForm.keyword" placeholder="资产名称 / 编号" clearable style="width: 240px" @keyup.enter="handleSearch" />
-      <el-select v-model="searchForm.status" style="width: 140px" @change="handleSearch">
+      <el-input v-model="searchForm.keyword" placeholder="资产名称 / 编号" clearable style="width: 200px" @keyup.enter="handleSearch" />
+      <el-select v-model="searchForm.status" style="width: 130px" @change="handleSearch">
         <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+      </el-select>
+      <el-select v-model="searchForm.category" style="width: 130px" placeholder="全部品类" clearable @change="handleSearch">
+        <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value" />
       </el-select>
       <el-button type="primary" @click="handleSearch"><el-icon><Search /></el-icon>搜索</el-button>
       <el-button @click="handleReset">重置</el-button>
-      <el-button type="primary" class="add-btn" @click="ElMessage.info('功能开发中')"><el-icon><Plus /></el-icon>新增资产</el-button>
+      <el-button type="primary" class="add-btn" @click="openCreate"><el-icon><Plus /></el-icon>新增资产</el-button>
     </div>
 
+    <!-- 表格 -->
     <el-table :data="tableData" v-loading="loading" stripe>
-      <el-table-column type="index" label="#" width="60" />
-      <el-table-column prop="name" label="资产名称" min-width="180" show-overflow-tooltip />
-      <el-table-column prop="code" label="编号" width="160" />
-      <el-table-column prop="category" label="品类" width="100" />
-      <el-table-column label="状态" width="100">
+      <el-table-column type="index" label="#" width="55" />
+      <el-table-column prop="name" label="资产名称" min-width="180" show-overflow-tooltip>
         <template #default="{ row }">
-          <el-tag :type="statusMap[row.status]?.type || ''" size="small">
-            {{ statusMap[row.status]?.label || row.status }}
-          </el-tag>
+          <el-button text type="primary" @click="openView(row.id)">{{ row.name }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="location" label="存放位置" width="140" show-overflow-tooltip />
-      <el-table-column label="入库时间" width="120">
+      <el-table-column prop="code" label="编号" width="150" />
+      <el-table-column prop="category" label="品类" width="90" />
+      <el-table-column label="状态" width="90">
+        <template #default="{ row }">
+          <el-tag :type="getStatus(row).type" size="small">{{ getStatus(row).label }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="location" label="存放位置" width="120" show-overflow-tooltip />
+      <el-table-column label="入库时间" width="110">
         <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="160" fixed="right">
+      <el-table-column label="操作" width="140" fixed="right">
         <template #default="{ row }">
-          <el-button text type="primary" size="small" @click="ElMessage.info('功能开发中')">编辑</el-button>
-          <el-button text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <el-button text type="primary" size="small" @click="openEdit(row.id)">编辑</el-button>
+          <el-button v-if="canDelete" text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
+    <!-- 分页 -->
     <div class="pagination-bar" v-if="pagination.total > 0">
       <el-pagination v-model:current-page="pagination.current" v-model:page-size="pagination.size" :total="pagination.total" :page-sizes="[10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handlePageChange" />
     </div>
+
+    <!-- 抽屉 -->
+    <AssetFormDrawer v-model:visible="drawerVisible" :mode="drawerMode" :asset-id="drawerAssetId" @saved="onSaved" />
   </div>
 </template>
 
