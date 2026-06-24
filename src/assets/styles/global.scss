@@ -12,3 +12,36 @@ html, body, #app {
   color: #1e293b;
   background-color: #f1f5f9;
 }
+
+.table-link {
+  color: #409eff;
+  cursor: pointer;
+}
+.table-link:hover {
+  color: #337ecc;
+}
+.table-action {
+  color: #409eff;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 8px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.table-action:hover {
+  color: #337ecc;
+  background: rgba(64, 158, 255, 0.08);
+}
+.table-action-danger {
+  color: #f56c6c;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.table-action-danger:hover {
+  color: #e04040;
+  background: rgba(245, 108, 108, 0.08);
+}

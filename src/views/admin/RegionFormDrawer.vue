@@ -79,6 +79,18 @@ function handleClose() { emit('update:visible', false) }
 
 <template>
   <el-drawer :model-value="visible" :title="title" direction="rtl" size="480px" @close="handleClose">
+    <el-alert
+      v-if="mode === 'edit'"
+      type="info"
+      show-icon
+      :closable="false"
+      style="margin-bottom: 20px"
+    >
+      <template #title>
+        修改名称后，该分区下所有部门和员工的所属显示将同步更新
+      </template>
+    </el-alert>
+
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top" :disabled="isDisabled" v-loading="loading">
       <el-form-item label="分区名称" prop="name">
         <el-input v-model="form.name" placeholder="如 华东分区" />

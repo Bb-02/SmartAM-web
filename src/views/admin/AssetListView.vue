@@ -94,7 +94,7 @@ onMounted(() => { fetchData() })
       <el-table-column type="index" label="#" width="55" />
       <el-table-column prop="name" label="资产名称" min-width="180" show-overflow-tooltip>
         <template #default="{ row }">
-          <el-button text type="primary" @click="openView(row.id)">{{ row.name }}</el-button>
+          <span class="table-link" @click="openView(row.id)">{{ row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="code" label="编号" width="150" />
@@ -110,8 +110,8 @@ onMounted(() => { fetchData() })
       </el-table-column>
       <el-table-column label="操作" width="140" fixed="right">
         <template #default="{ row }">
-          <el-button text type="primary" size="small" @click="openEdit(row.id)">编辑</el-button>
-          <el-button v-if="canDelete" text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <span class="table-action" @click="openEdit(row.id)">编辑</span>
+          <span v-if="canDelete" class="table-action-danger" @click="handleDelete(row)">删除</span>
         </template>
       </el-table-column>
     </el-table>

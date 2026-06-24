@@ -105,10 +105,10 @@ onMounted(() => { fetchData() })
     <!-- 表格 -->
     <el-table :data="tableData" v-loading="loading" stripe>
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="username" label="用户名" width="130" />
-      <el-table-column label="姓名" width="100">
+      <el-table-column prop="username" label="用户名" min-width="140" show-overflow-tooltip />
+      <el-table-column label="姓名" min-width="120">
         <template #default="{ row }">
-          <el-button text type="primary" @click="openView(row.id)">{{ row.realName }}</el-button>
+          <span class="table-link" @click="openView(row.id)">{{ row.realName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="角色" width="110">
@@ -127,8 +127,8 @@ onMounted(() => { fetchData() })
       </el-table-column>
       <el-table-column label="操作" width="140" fixed="right">
         <template #default="{ row }">
-          <el-button text type="primary" size="small" @click="openEdit(row.id)">编辑</el-button>
-          <el-button v-if="canDeleteUser(row)" text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <span class="table-action" @click="openEdit(row.id)">编辑</span>
+          <span v-if="canDeleteUser(row)" class="table-action-danger" @click="handleDelete(row)">删除</span>
         </template>
       </el-table-column>
     </el-table>
@@ -148,4 +148,5 @@ onMounted(() => { fetchData() })
 .search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .add-btn { margin-left: auto; }
 .pagination-bar { display: flex; justify-content: flex-end; margin-top: 16px; }
+
 </style>

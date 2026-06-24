@@ -41,7 +41,7 @@ onMounted(() => { fetchData() })
       <el-table-column type="index" label="#" width="55" />
       <el-table-column label="资产名称" min-width="180">
         <template #default="{ row }">
-          <el-button text type="primary" @click="openView(row.id)">{{ row.name }}</el-button>
+          <span class="table-link" @click="openView(row.id)">{{ row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="code" label="编号" width="150" />

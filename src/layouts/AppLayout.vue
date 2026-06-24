@@ -24,7 +24,7 @@ function handleCommand(command: string) {
 <template>
   <el-container class="app-layout">
     <!-- 左侧 Sidebar -->
-    <el-aside width="260px" class="app-aside">
+    <el-aside width="220px" class="app-aside">
       <div class="sidebar-logo">
         <h1>SmartAM</h1>
         <p>智能资产管理系统</p>

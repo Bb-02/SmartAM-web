@@ -81,7 +81,7 @@ onMounted(async () => {
       <el-table-column type="index" label="#" width="55" />
       <el-table-column label="部门名称" min-width="140">
         <template #default="{ row }">
-          <el-button text type="primary" @click="openView(row.id)">{{ row.name }}</el-button>
+          <span class="table-link" @click="openView(row.id)">{{ row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="code" label="编码" width="100" />
@@ -97,8 +97,8 @@ onMounted(async () => {
       </el-table-column>
       <el-table-column label="操作" width="160" fixed="right">
         <template #default="{ row }">
-          <el-button text type="primary" size="small" @click="openEdit(row.id)">编辑</el-button>
-          <el-button text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <span class="table-action" @click="openEdit(row.id)">编辑</span>
+          <span class="table-action-danger" @click="handleDelete(row)">删除</span>
         </template>
       </el-table-column>
     </el-table>

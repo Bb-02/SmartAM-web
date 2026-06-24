@@ -71,14 +71,14 @@ onMounted(() => { fetchData() })
       <el-table-column type="index" label="#" width="55" />
       <el-table-column label="分区名称" min-width="140">
         <template #default="{ row }">
-          <el-button text type="primary" @click="openView(row.id)">{{ row.name }}</el-button>
+          <span class="table-link" @click="openView(row.id)">{{ row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="code" label="标识" width="120" />
       <el-table-column label="类型" width="90">
         <template #default="{ row }">
           <el-tag v-if="row.isDefault === 1" type="warning" size="small">默认</el-tag>
-          <span v-else class="text-muted">普通</span>
+          <el-tag v-else type="info" size="small">普通</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="状态" width="90">
@@ -90,11 +90,11 @@ onMounted(() => { fetchData() })
       </el-table-column>
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button text type="primary" size="small" @click="openEdit(row.id)">编辑</el-button>
-          <el-button text size="small" @click="handleToggle(row)">
+          <span class="table-action" @click="openEdit(row.id)">编辑</span>
+          <span class="table-action" @click="handleToggle(row)">
             {{ row.status === 1 ? '停用' : '启用' }}
-          </el-button>
-          <el-button v-if="canDelete(row)" text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          </span>
+          <span v-if="canDelete(row)" class="table-action-danger" @click="handleDelete(row)">删除</span>
         </template>
       </el-table-column>
     </el-table>
