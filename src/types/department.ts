@@ -9,3 +9,16 @@ export interface DepartmentItem {
   createdAt: string
   updatedAt: string
 }
+
+export interface DepartmentCreateRequest {
+  name: string
+  code: string
+  regionId?: number
+  parentId?: number
+}
+
+export interface DepartmentUpdateRequest {
+  name?: string
+  code?: string
+  parentId?: number
+}

@@ -8,3 +8,13 @@ export interface RegionItem {
   createdAt: string
   updatedAt: string
 }
+
+export interface RegionCreateRequest {
+  name: string
+  code: string
+}
+
+export interface RegionUpdateRequest {
+  name?: string
+  code?: string
+}
