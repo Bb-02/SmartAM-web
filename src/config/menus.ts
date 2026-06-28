@@ -24,7 +24,7 @@ const menus: Record<string, MenuItem[]> = {
     { path: '/engineer/pool', title: '工单池', icon: 'List' },
     { path: '/engineer/my-orders', title: '我的工单', icon: 'Document' },
     { path: '/engineer/assets', title: '资产查看', icon: 'Goods' },
-    { path: '/engineer/history', title: '历史工单', icon: 'Clock' },
+
   ],
   '/employee': [
     { path: '/employee/dashboard', title: '工作台', icon: 'HomeFilled' },

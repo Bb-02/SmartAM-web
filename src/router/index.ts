@@ -60,7 +60,7 @@ const router = createRouter({
         { path: 'pool', name: 'WorkOrderPool', component: () => import('@/views/engineer/WorkOrderPoolView.vue'), meta: { title: '工单池' } },
         { path: 'my-orders', name: 'MyOrders', component: () => import('@/views/engineer/MyOrdersView.vue'), meta: { title: '我的工单' } },
         { path: 'assets', name: 'EngineerAssets', component: () => import('@/views/engineer/AssetViewView.vue'), meta: { title: '资产查看' } },
-        { path: 'history', name: 'OrderHistory', component: () => import('@/views/engineer/HistoryView.vue'), meta: { title: '历史工单' } },
+
       ],
     },
 
