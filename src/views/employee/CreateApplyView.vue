@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { getAssetList } from '@/api/assets'
+import { createApplication } from '@/api/asset-applications'
 import { useAuthStore } from '@/stores/auth'
 import { categoryLabel } from '@/types/asset'
 import type { AssetItem, AssetCategory } from '@/types/asset'
@@ -14,17 +14,18 @@ const availableAssets = ref<AssetItem[]>([])
 
 const form = reactive({
   assetId: undefined as number | undefined,
+  type: 'APPLY' as string,
   reason: '',
 })
 
 const rules: FormRules = {
+  assetId: [{ required: true, message: '请选择资产', trigger: 'change' }],
   reason: [{ required: true, message: '请输入申领原因', trigger: 'blur' }],
 }
 
 async function loadAvailableAssets() {
   try {
     const res = await getAssetList({ page: 1, size: 500 })
-    // 只展示在库且未分配的资产
     availableAssets.value = res.data.records.filter(
       (a) => a.status === 'IN_STORAGE'
     )
@@ -39,8 +40,17 @@ async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
-  // 申领功能待后端接口
-  ElMessage.info('申领功能将在后续版本中开放')
+  submitting.value = true
+  try {
+    await createApplication({ assetId: form.assetId!, reason: form.reason, type: form.type })
+    ElMessage.success('申领已提交，等待管理员审批')
+    form.assetId = undefined
+    form.reason = ''
+    form.type = 'APPLY'
+    formRef.value?.resetFields()
+    loadAvailableAssets()
+  } catch { /* toast */ }
+  finally { submitting.value = false }
 }
 
 onMounted(() => { loadAvailableAssets() })
@@ -76,7 +86,6 @@ onMounted(() => { loadAvailableAssets() })
           <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit">
             <el-icon><Plus /></el-icon>提交申领
           </el-button>
-          <span class="form-hint">申领功能将在后续版本中开放</span>
         </el-form-item>
       </el-form>
     </div>

@@ -79,6 +79,26 @@ const router = createRouter({
       ],
     },
 
+    // ── 个人设置（所有角色共用） ──
+    {
+      path: '/profile',
+      component: () => import('@/layouts/AppLayout.vue'),
+      meta: { requiresAuth: true, roles: ['ADMIN_TENANT', 'ADMIN_REGION', 'ENGINEER', 'EMPLOYEE'] },
+      children: [
+        { path: '', name: 'Profile', component: () => import('@/views/ProfileView.vue'), meta: { title: '个人设置' } },
+      ],
+    },
+
+    // ── 消息中心（所有角色共用） ──
+    {
+      path: '/messages',
+      component: () => import('@/layouts/AppLayout.vue'),
+      meta: { requiresAuth: true, roles: ['ADMIN_TENANT', 'ADMIN_REGION', 'ENGINEER', 'EMPLOYEE'] },
+      children: [
+        { path: '', name: 'Messages', component: () => import('@/views/MessageListView.vue'), meta: { title: '消息通知' } },
+      ],
+    },
+
     // ── 兜底 ──
     { path: '/:pathMatch(.*)*', redirect: '/login' },
   ],

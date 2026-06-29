@@ -3,9 +3,12 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getAssetList, deleteAsset } from '@/api/assets'
 import { useAuthStore } from '@/stores/auth'
-import { statusTagType, statusLabel, statusOptions, categoryOptions, categoryLabel } from '@/types/asset'
+import { useDict } from '@/composables/useDict'
+import { statusTagType, statusLabel, categoryOptions, categoryLabel } from '@/types/asset'
 import type { AssetItem, AssetStatus, AssetCategory } from '@/types/asset'
 import AssetFormDrawer from './AssetFormDrawer.vue'
+
+const { options: dictOptions } = useDict()
 
 const authStore = useAuthStore()
 const canDelete = computed(() => authStore.role === 'ADMIN_TENANT')
@@ -89,7 +92,7 @@ onMounted(() => { fetchData() })
     <div class="search-bar">
       <el-input v-model="searchForm.keyword" placeholder="资产名称 / 编号" clearable style="width: 220px" @keyup.enter="handleSearch" />
       <el-select v-model="searchForm.status" style="width: 130px" placeholder="全部状态" clearable @change="handleSearch">
-        <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+        <el-option v-for="opt in dictOptions('assetStatuses')" :key="opt.value" :label="opt.label" :value="opt.value" />
       </el-select>
       <el-select v-model="searchForm.category" style="width: 140px" placeholder="全部品类" clearable @change="handleSearch">
         <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value" />

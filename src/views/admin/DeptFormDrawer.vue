@@ -2,11 +2,11 @@
 import { ref, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { createDepartment, updateDepartment, getDepartment, getDepartmentList } from '@/api/departments'
+import { createDepartment, updateDepartment, getDepartment, getDepartmentTree } from '@/api/departments'
 import { getRegionList } from '@/api/regions'
 import { useAuthStore } from '@/stores/auth'
 import type { RegionItem } from '@/types/region'
-import type { DepartmentItem } from '@/types/department'
+import type { DepartmentTreeNode } from '@/types/department'
 
 const props = defineProps<{
   visible: boolean
@@ -23,7 +23,7 @@ const authStore = useAuthStore()
 const isTenantAdmin = computed(() => authStore.role === 'ADMIN_TENANT')
 
 const regionOptions = ref<RegionItem[]>([])
-const deptOptions = ref<DepartmentItem[]>([])
+const deptTree = ref<DepartmentTreeNode[]>([])
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const loading = ref(false)
@@ -36,10 +36,12 @@ const title = computed(() => {
 
 const isDisabled = computed(() => props.mode === 'view')
 
-// 上级部门可选列表（排除自己）
-const parentOptions = computed(() =>
-  deptOptions.value.filter((d) => d.id !== props.deptId),
-)
+// 过滤掉自己（防止循环引用）
+function filterSelf(nodes: DepartmentTreeNode[]): DepartmentTreeNode[] {
+  return nodes
+    .filter((n) => n.id !== props.deptId)
+    .map((n) => ({ ...n, children: filterSelf(n.children) }))
+}
 
 const form = ref({ name: '', code: '', regionId: undefined as number | undefined, parentId: undefined as number | undefined })
 const rules: FormRules = {
@@ -52,9 +54,9 @@ watch(
   async (v) => {
     if (!v) return
     try {
-      const [regionRes, deptRes] = await Promise.all([getRegionList(), getDepartmentList()])
+      const [regionRes, treeRes] = await Promise.all([getRegionList(), getDepartmentTree()])
       regionOptions.value = regionRes.data.records
-      deptOptions.value = deptRes.data.records
+      deptTree.value = treeRes.data
     } catch { /* ignore */ }
 
     if (props.mode === 'create') {
@@ -74,11 +76,6 @@ watch(
     }
   },
 )
-
-function getDeptLabel(d: DepartmentItem) {
-  const region = regionOptions.value.find((r) => r.id === d.regionId)
-  return region ? `${d.name}（${region.name}）` : d.name
-}
 
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
@@ -137,17 +134,18 @@ function handleClose() { emit('update:visible', false) }
         </el-select>
       </el-form-item>
       <el-form-item label="上级部门">
-        <el-select v-model="form.parentId" style="width: 100%" placeholder="选择上级部门" clearable filterable>
-          <el-option label="无（顶级部门）" :value="undefined" />
-          <el-option
-            v-for="d in parentOptions"
-            :key="d.id"
-            :label="getDeptLabel(d)"
-            :value="d.id"
-          />
-        </el-select>
+        <el-tree-select
+          v-model="form.parentId"
+          :data="filterSelf(deptTree)"
+          :props="{ label: 'name', value: 'id', children: 'children' }"
+          placeholder="无（顶级部门）"
+          clearable
+          check-strictly
+          filterable
+          style="width: 100%"
+        />
         <div style="font-size:12px;color:#94a3b8;margin-top:4px">
-          选"无"则为顶级部门，选上级则构成父子层级（仅用于组织架构展示，不影响权限）
+          不选则为顶级部门，选上级则构成父子层级（仅用于组织架构展示，不影响权限）
         </div>
       </el-form-item>
     </el-form>

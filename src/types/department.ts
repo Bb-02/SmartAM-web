@@ -10,6 +10,15 @@ export interface DepartmentItem {
   updatedAt: string
 }
 
+export interface DepartmentTreeNode {
+  id: number
+  name: string
+  code: string
+  parentId: number | null
+  regionId: number
+  children: DepartmentTreeNode[]
+}
+
 export interface DepartmentCreateRequest {
   name: string
   code: string

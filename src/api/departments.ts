@@ -1,6 +1,10 @@
 import http from './index'
 import type { ApiResponse, PageResult } from '@/types/api'
-import type { DepartmentItem, DepartmentCreateRequest, DepartmentUpdateRequest } from '@/types/department'
+import type { DepartmentItem, DepartmentTreeNode, DepartmentCreateRequest, DepartmentUpdateRequest } from '@/types/department'
+
+export function getDepartmentTree(): Promise<ApiResponse<DepartmentTreeNode[]>> {
+  return http.get('/departments/tree').then((res) => res.data)
+}
 
 export function getDepartmentList(params?: {
   regionId?: number

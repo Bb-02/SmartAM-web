@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { createUser, updateUser, getUser } from '@/api/users'
+import { createUser, updateUser, getUser, resetUserPassword } from '@/api/users'
 import { getRegionList } from '@/api/regions'
 import { getDepartmentList } from '@/api/departments'
 import { useAuthStore } from '@/stores/auth'
@@ -161,6 +161,25 @@ async function handleSubmit() {
   finally { submitting.value = false }
 }
 
+async function handleResetPwd() {
+  let pwd = ''
+  try {
+    const { value } = await ElMessageBox.prompt('请输入新密码（不少于6位）', '重置密码', {
+      type: 'warning',
+      inputType: 'password',
+      inputPlaceholder: '新密码',
+      inputValidator: (v: string) => v.length >= 6 ? true : '密码不少于6位',
+    })
+    pwd = value || ''
+  } catch { return }
+  submitting.value = true
+  try {
+    await resetUserPassword(props.userId!, { password: pwd })
+    ElMessage.success('密码已重置')
+  } catch { /* toast */ }
+  finally { submitting.value = false }
+}
+
 function handleClose() {
   emit('update:visible', false)
 }
@@ -245,6 +264,7 @@ function handleClose() {
     </el-form>
 
     <template v-if="!isDisabled" #footer>
+      <el-button v-if="mode === 'edit' && isTenantAdmin" type="danger" plain :loading="submitting" @click="handleResetPwd" style="margin-right: auto">重置密码</el-button>
       <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" :loading="submitting" @click="handleSubmit">
         {{ mode === 'create' ? '确认新增' : '保存修改' }}

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getWorkOrderList, confirmWorkOrder, rejectWorkOrder, getWorkOrderLogs } from '@/api/work-orders'
+import { getWorkOrderList, confirmWorkOrder, rejectWorkOrder, cancelWorkOrder, updateWorkOrder, getWorkOrderLogs } from '@/api/work-orders'
 import { useAuthStore } from '@/stores/auth'
 import { WO_STATUS_LABEL, WO_STATUS_TAG, PRIORITY_LABEL, PRIORITY_TAG } from '@/types/work-order'
 import type { WorkOrderItem, WorkOrderStatus } from '@/types/work-order'
@@ -17,6 +17,8 @@ const selected = ref<WorkOrderItem | null>(null)
 const detailLoading = ref(false)
 const logs = ref<any[]>([])
 const acting = ref(false)
+const editing = ref(false)
+const editForm = reactive({ title: '', description: '', priority: 'NORMAL' })
 
 const pendingCount = computed(() => listData.value.filter((r) => r.status === 'PENDING').length)
 const inWorkCount = computed(() => listData.value.filter((r) => r.status === 'IN_WORK').length)
@@ -28,6 +30,7 @@ const statusOptions = [
   { label: '处理中', value: 'IN_WORK' },
   { label: '已解决', value: 'RESOLVED' },
   { label: '已结单', value: 'CLOSED' },
+  { label: '已取消', value: 'CANCELLED' },
 ]
 
 async function fetchData() {
@@ -96,14 +99,56 @@ async function handleReject() {
   finally { acting.value = false }
 }
 
+async function handleCancel() {
+  try {
+    await ElMessageBox.confirm('确定取消此工单？取消后不可恢复。', '取消工单', { type: 'warning' })
+  } catch { return }
+  acting.value = true
+  try {
+    await cancelWorkOrder(selected.value!.id)
+    ElMessage.success('工单已取消')
+    selected.value = null
+    fetchData()
+  } catch { /* toast */ }
+  finally { acting.value = false }
+}
+
+function startEdit() {
+  if (!selected.value) return
+  editForm.title = selected.value.title
+  editForm.description = selected.value.description || ''
+  editForm.priority = selected.value.priority || 'NORMAL'
+  editing.value = true
+}
+
+async function saveEdit() {
+  if (!editForm.title.trim()) {
+    ElMessage.warning('标题不能为空')
+    return
+  }
+  acting.value = true
+  try {
+    await updateWorkOrder(selected.value!.id, {
+      title: editForm.title,
+      description: editForm.description,
+      priority: editForm.priority === 'NORMAL' ? undefined : editForm.priority,
+    })
+    ElMessage.success('已更新')
+    editing.value = false
+    fetchData()
+    selectItem(listData.value.find((r) => r.id === selected.value!.id) || selected.value!)
+  } catch { /* toast */ }
+  finally { acting.value = false }
+}
+
 function handleSearch() { pagination.current = 1; fetchData() }
 function handleReset() { searchForm.keyword = ''; searchForm.status = ''; pagination.current = 1; fetchData() }
 function handlePageChange(p: number) { pagination.current = p; fetchData() }
 function formatTime(iso: string) { return iso ? iso.slice(0, 16).replace('T', ' ') : '-' }
-function statusColor(s: string) { if (s === 'PENDING') return '#d97706'; if (s === 'IN_WORK') return '#2563eb'; if (s === 'RESOLVED') return '#16a34a'; return '#94a3b8' }
+function statusColor(s: string) { if (s === 'PENDING') return '#d97706'; if (s === 'IN_WORK') return '#2563eb'; if (s === 'RESOLVED') return '#16a34a'; if (s === 'CANCELLED') return '#94a3b8'; return '#94a3b8' }
 
 const logActionLabel: Record<string, string> = {
-  CREATE: '提交报修', CLAIM: '受理', RESOLVE: '提交结果', CONFIRM: '确认结单', REJECT: '驳回',
+  CREATE: '提交报修', CLAIM: '受理', RESOLVE: '提交结果', CONFIRM: '确认结单', REJECT: '驳回', CANCEL: '取消工单', EDIT: '编辑',
 }
 
 onMounted(() => { fetchData() })
@@ -180,6 +225,35 @@ onMounted(() => { fetchData() })
             <div class="detail-text">{{ selected.description || '无详细描述' }}</div>
           </div>
 
+          <!-- 编辑模式 -->
+          <template v-if="editing && selected.status === 'PENDING'">
+            <div class="detail-section">
+              <div class="section-label">编辑工单</div>
+              <el-form label-position="top" size="small">
+                <el-form-item label="标题">
+                  <el-input v-model="editForm.title" />
+                </el-form-item>
+                <el-form-item label="描述">
+                  <el-input v-model="editForm.description" type="textarea" :rows="3" />
+                </el-form-item>
+                <el-form-item label="优先级">
+                  <el-select v-model="editForm.priority" style="width: 120px">
+                    <el-option label="低" value="LOW" />
+                    <el-option label="普通" value="NORMAL" />
+                    <el-option label="高" value="HIGH" />
+                    <el-option label="紧急" value="URGENT" />
+                  </el-select>
+                </el-form-item>
+              </el-form>
+            </div>
+          </template>
+          <template v-else>
+            <div v-if="selected.description" class="detail-section">
+              <div class="section-label">问题描述</div>
+              <div class="detail-text">{{ selected.description || '无详细描述' }}</div>
+            </div>
+          </template>
+
           <div v-if="selected.resolution" class="detail-section">
             <div class="section-label">处理结果</div>
             <div class="detail-text">{{ selected.resolution }}</div>
@@ -195,9 +269,21 @@ onMounted(() => { fetchData() })
             </el-timeline>
           </div>
 
-          <div v-if="selected.status === 'RESOLVED'" class="detail-actions">
-            <el-button type="primary" :loading="acting" @click="handleConfirm">确认结单</el-button>
-            <el-button type="danger" :loading="acting" @click="handleReject">驳回重做</el-button>
+          <div class="detail-actions">
+            <template v-if="selected.status === 'PENDING'">
+              <template v-if="editing">
+                <el-button type="primary" size="small" :loading="acting" @click="saveEdit">保存</el-button>
+                <el-button size="small" @click="editing = false">取消编辑</el-button>
+              </template>
+              <template v-else>
+                <el-button size="small" @click="startEdit">编辑</el-button>
+                <el-button type="danger" size="small" :loading="acting" @click="handleCancel">取消工单</el-button>
+              </template>
+            </template>
+            <template v-if="selected.status === 'RESOLVED'">
+              <el-button type="primary" :loading="acting" @click="handleConfirm">确认结单</el-button>
+              <el-button type="danger" :loading="acting" @click="handleReject">驳回重做</el-button>
+            </template>
           </div>
         </div>
       </template>
