@@ -17,12 +17,13 @@ const statusColor: Record<string, string> = { PENDING: '#d97706', IN_WORK: '#256
 
 onMounted(async () => {
   try {
+    const userId = authStore.userId!
     const [assetRes, orderRes] = await Promise.all([
-      getAssetList({ page: 1, size: 500 }),
-      getWorkOrderList({ page: 1, size: 500 }),
+      getAssetList({ page: 1, size: 500, userId }),
+      getWorkOrderList({ page: 1, size: 200, reporterId: userId }),
     ])
-    const myAssets = assetRes.data.records.filter((a) => a.userId === authStore.userId)
-    const myOrders = orderRes.data.records.filter((o) => o.reporterId === authStore.userId)
+    const myAssets = assetRes.data.records
+    const myOrders = orderRes.data.records
 
     stats.value = {
       assetCount: myAssets.length,

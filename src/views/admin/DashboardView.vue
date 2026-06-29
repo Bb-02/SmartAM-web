@@ -2,10 +2,9 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { getOverview } from '@/api/statistics'
 import { getAssetList } from '@/api/assets'
-import { getUserList } from '@/api/users'
 import { getRegionList } from '@/api/regions'
-import { getDepartmentList } from '@/api/departments'
 import { getWorkOrderList } from '@/api/work-orders'
 
 const router = useRouter()
@@ -24,45 +23,42 @@ const regionSummaries = ref<{ name: string; assets: number; orders: number }[]>(
 
 onMounted(async () => {
   try {
-    const [assetRes, userRes, orderRes] = await Promise.all([
-      getAssetList({ page: 1, size: 1 }),
-      getUserList({ page: 1, size: 1 }),
+    const [overviewRes, orderRes, assetRes, regionRes] = await Promise.all([
+      getOverview(),
       getWorkOrderList({ page: 1, size: 200 }),
+      getAssetList({ page: 1, size: 200 }),
+      isTenantAdmin.value ? getRegionList() : Promise.resolve(null),
     ])
-    const assetTotal = assetRes.data.total
-    const userTotal = userRes.data.total
+    const overview = overviewRes.data
     const orders = orderRes.data.records
-
     const now = new Date()
+
+    // 即将过保资产
     const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-    const expiringRes = await getAssetList({ page: 1, size: 200 })
-    const expiring = expiringRes.data.records.filter((a) => {
+    const expiring = assetRes.data.records.filter((a) => {
       if (!a.warrantyEnd) return false
       const d = new Date(a.warrantyEnd)
       return d >= now && d <= thirtyDaysLater
     })
 
     stats.value = {
-      assetTotal,
+      assetTotal: overview.assetTotal,
       assetExpiring: expiring.length,
-      userTotal,
-      orderPending: orders.filter((o) => o.status === 'PENDING').length,
-      orderInWork: orders.filter((o) => o.status === 'IN_WORK').length,
-      orderResolved: orders.filter((o) => o.status === 'RESOLVED').length,
+      userTotal: overview.userTotal,
+      orderPending: overview.woPending,
+      orderInWork: overview.woInWork,
+      orderResolved: overview.woResolved,
       orderStalled: orders.filter((o) => {
         if (o.status !== 'PENDING') return false
         const created = new Date(o.createdAt)
         return (now.getTime() - created.getTime()) > 48 * 60 * 60 * 1000
       }).length,
-      regionTotal: 0,
-      deptTotal: 0,
+      regionTotal: overview.regionTotal,
+      deptTotal: overview.departmentTotal,
     }
 
-    if (isTenantAdmin.value) {
-      const [regionRes, deptRes] = await Promise.all([getRegionList(), getDepartmentList()])
-      stats.value.regionTotal = regionRes.data.records.length
-      stats.value.deptTotal = deptRes.data.records.length
-
+    // 分区概况
+    if (isTenantAdmin.value && regionRes) {
       regionSummaries.value = regionRes.data.records.map((r) => ({
         name: r.name,
         assets: 0,

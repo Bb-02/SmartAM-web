@@ -7,6 +7,10 @@ export function getWorkOrderList(params?: {
   size?: number
   status?: string
   priority?: string
+  keyword?: string
+  assetId?: number
+  engineerId?: number
+  reporterId?: number
 }): Promise<ApiResponse<PageResult<WorkOrderItem>>> {
   return http.get('/work-orders', { params: { page: 1, size: 20, ...params } }).then((res) => res.data)
 }

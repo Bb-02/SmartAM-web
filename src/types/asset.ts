@@ -70,7 +70,9 @@ export interface AssetQueryParams {
   size?: number
   status?: string
   category?: string
+  regionId?: number
   deptId?: number
+  userId?: number
   keyword?: string
 }
 

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { getOverview } from '@/api/statistics'
 import { getWorkOrderList } from '@/api/work-orders'
 
 const router = useRouter()
@@ -13,15 +14,15 @@ const recentOrders = ref<{ id: number; title: string; priority: string; reporter
 
 onMounted(async () => {
   try {
-    const [pendingRes, myRes] = await Promise.all([
-      getWorkOrderList({ page: 1, size: 200, status: 'PENDING' }),
+    const [overviewRes, allRes] = await Promise.all([
+      getOverview(),
       getWorkOrderList({ page: 1, size: 200 }),
     ])
-    const all = myRes.data.records
-    const myOrders = all.filter((o) => o.engineerId === authStore.userId)
+    const overview = overviewRes.data
+    const myOrders = allRes.data.records.filter((o) => o.engineerId === authStore.userId)
 
     stats.value = {
-      pending: pendingRes.data.records.length,
+      pending: overview.woPending,
       inWork: myOrders.filter((o) => o.status === 'IN_WORK').length,
       resolvedToday: myOrders.filter((o) => {
         if (o.status !== 'RESOLVED' && o.status !== 'CLOSED') return false
@@ -31,7 +32,9 @@ onMounted(async () => {
       }).length,
     }
 
-    recentOrders.value = pendingRes.data.records
+    // 最近 5 条待受理工单（工单池中）
+    recentOrders.value = allRes.data.records
+      .filter((o) => o.status === 'PENDING')
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 5)
       .map((o) => ({
