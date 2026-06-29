@@ -34,6 +34,21 @@ export interface UserUpdateRequest {
   status?: number
 }
 
+export interface UserSelfUpdateRequest {
+  realName?: string
+  phone?: string
+  email?: string
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string
+  newPassword: string
+}
+
+export interface ResetPasswordRequest {
+  password: string
+}
+
 // ── 角色常量 ──
 export const ROLE_LABEL: Record<string, string> = {
   ADMIN_TENANT: '租户管理员',
