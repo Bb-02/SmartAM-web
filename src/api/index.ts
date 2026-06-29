@@ -37,7 +37,10 @@ http.interceptors.response.use(
       router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
       ElMessage.error('登录已过期，请重新登录')
     } else if (status === 403) {
-      ElMessage.error('无权限访问')
+      const authStore = useAuthStore()
+      authStore.logout()
+      router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
+      ElMessage.error('登录已过期，请重新登录')
     } else if (status === 500) {
       ElMessage.error('服务器内部错误')
     } else {
