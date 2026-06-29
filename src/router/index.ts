@@ -31,7 +31,7 @@ const router = createRouter({
         { path: 'users', name: 'TenantUsers', component: () => import('@/views/admin/UserListView.vue'), meta: { title: '用户管理' } },
         { path: 'regions', name: 'TenantRegions', component: () => import('@/views/admin/RegionListView.vue'), meta: { title: '分区管理' } },
         { path: 'depts', name: 'TenantDepts', component: () => import('@/views/admin/DeptListView.vue'), meta: { title: '部门管理' } },
-        { path: 'tickets', name: 'TenantTickets', component: () => import('@/views/admin/TicketListView.vue'), meta: { title: '工单管理' } },
+        { path: 'tickets', name: 'TenantTickets', component: () => import('@/views/admin/TicketListView.vue'), meta: { title: '工单审批' } },
       ],
     },
 
@@ -45,7 +45,7 @@ const router = createRouter({
         { path: 'dashboard', name: 'RegionDashboard', component: () => import('@/views/admin/DashboardView.vue'), meta: { title: '首页' } },
         { path: 'assets', name: 'RegionAssets', component: () => import('@/views/admin/AssetListView.vue'), meta: { title: '资产管理' } },
         { path: 'users', name: 'RegionUsers', component: () => import('@/views/admin/UserListView.vue'), meta: { title: '用户管理' } },
-        { path: 'tickets', name: 'RegionTickets', component: () => import('@/views/admin/TicketListView.vue'), meta: { title: '工单管理' } },
+        { path: 'tickets', name: 'RegionTickets', component: () => import('@/views/admin/TicketListView.vue'), meta: { title: '工单审批' } },
       ],
     },
 

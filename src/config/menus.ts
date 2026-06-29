@@ -11,13 +11,13 @@ const menus: Record<string, MenuItem[]> = {
     { path: '/admin/tenant/users', title: '用户管理', icon: 'UserFilled' },
     { path: '/admin/tenant/regions', title: '分区管理', icon: 'Location' },
     { path: '/admin/tenant/depts', title: '部门管理', icon: 'OfficeBuilding' },
-    { path: '/admin/tenant/tickets', title: '工单管理', icon: 'Document' },
+    { path: '/admin/tenant/tickets', title: '工单审批', icon: 'Document' },
   ],
   '/admin/region': [
     { path: '/admin/region/dashboard', title: '首页', icon: 'HomeFilled' },
     { path: '/admin/region/assets', title: '资产管理', icon: 'Goods' },
     { path: '/admin/region/users', title: '用户管理', icon: 'UserFilled' },
-    { path: '/admin/region/tickets', title: '工单管理', icon: 'Document' },
+    { path: '/admin/region/tickets', title: '工单审批', icon: 'Document' },
   ],
   '/engineer': [
     { path: '/engineer/dashboard', title: '工作台', icon: 'HomeFilled' },
