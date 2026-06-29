@@ -1,11 +1,12 @@
 // ── 状态 ──
-export type WorkOrderStatus = 'PENDING' | 'IN_WORK' | 'RESOLVED' | 'CLOSED'
+export type WorkOrderStatus = 'PENDING' | 'IN_WORK' | 'RESOLVED' | 'CLOSED' | 'CANCELLED'
 
 export const WO_STATUS_LABEL: Record<WorkOrderStatus, string> = {
   PENDING: '待受理',
   IN_WORK: '处理中',
   RESOLVED: '已解决',
   CLOSED: '已结单',
+  CANCELLED: '已取消',
 }
 
 export const WO_STATUS_TAG: Record<WorkOrderStatus, string> = {
@@ -13,6 +14,7 @@ export const WO_STATUS_TAG: Record<WorkOrderStatus, string> = {
   IN_WORK: '',
   RESOLVED: 'success',
   CLOSED: 'info',
+  CANCELLED: 'info',
 }
 
 // ── 优先级 ──
@@ -57,5 +59,11 @@ export interface WorkOrderCreateRequest {
   type?: string
   description?: string
   assetId?: number
+  priority?: string
+}
+
+export interface WorkOrderUpdateRequest {
+  title?: string
+  description?: string
   priority?: string
 }

@@ -1,6 +1,6 @@
 import http from './index'
 import type { ApiResponse, PageResult } from '@/types/api'
-import type { WorkOrderItem, WorkOrderCreateRequest } from '@/types/work-order'
+import type { WorkOrderItem, WorkOrderCreateRequest, WorkOrderUpdateRequest } from '@/types/work-order'
 
 export function getWorkOrderList(params?: {
   page?: number
@@ -37,6 +37,14 @@ export function rejectWorkOrder(id: number, remark: string): Promise<ApiResponse
 
 export function confirmWorkOrder(id: number, rating: number): Promise<ApiResponse<null>> {
   return http.post(`/work-orders/${id}/confirm`, { rating }).then((res) => res.data)
+}
+
+export function updateWorkOrder(id: number, data: WorkOrderUpdateRequest): Promise<ApiResponse<WorkOrderItem>> {
+  return http.put(`/work-orders/${id}`, data).then((res) => res.data)
+}
+
+export function cancelWorkOrder(id: number): Promise<ApiResponse<null>> {
+  return http.post(`/work-orders/${id}/cancel`).then((res) => res.data)
 }
 
 export function getWorkOrderLogs(id: number): Promise<ApiResponse<any[]>> {
