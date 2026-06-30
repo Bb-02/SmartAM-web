@@ -4,8 +4,8 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { createAsset, updateAsset, getAsset, getAssetLogs } from '@/api/assets'
 import { getRegionList } from '@/api/regions'
-import { getDepartmentList, getDepartment } from '@/api/departments'
-import { getUserList, getUser } from '@/api/users'
+import { getDepartmentList } from '@/api/departments'
+import { getUserList } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
 import { categoryOptions, statusOptions as allStatusOptions, categoryLabel } from '@/types/asset'
 import type { AssetItem, AssetLog, AssetCategory } from '@/types/asset'
@@ -32,9 +32,9 @@ const regionOptions = ref<RegionItem[]>([])
 const deptOptions = ref<DepartmentItem[]>([])
 const userOptions = ref<UserItem[]>([])
 
-// 非管理员 view 模式下单独解析的名称
-const resolvedDeptName = ref('')
-const resolvedUserName = ref('')
+// view 模式下从响应中获取的关联名称
+const assetDeptName = ref('')
+const assetUserName = ref('')
 
 const statusOptions = allStatusOptions.filter((o) => o.value !== '')
 
@@ -91,7 +91,6 @@ watch(
 )
 
 async function loadOptions() {
-  if (!isAdmin.value) return
   try {
     const [regionRes, deptRes, userRes] = await Promise.all([
       getRegionList(),
@@ -101,18 +100,6 @@ async function loadOptions() {
     regionOptions.value = regionRes.data.records
     deptOptions.value = deptRes.data.records
     userOptions.value = userRes.data.records
-  } catch { /* ignore */ }
-}
-
-async function resolveNames(deptId: number | null | undefined, userId: number | null | undefined) {
-  resolvedDeptName.value = ''
-  resolvedUserName.value = ''
-  if (!deptId && !userId) return
-  try {
-    const tasks: Promise<any>[] = []
-    if (deptId) tasks.push(getDepartment(deptId).then((r) => { resolvedDeptName.value = r.data.name }).catch(() => {}))
-    if (userId) tasks.push(getUser(userId).then((r) => { resolvedUserName.value = r.data.realName }).catch(() => {}))
-    await Promise.all(tasks)
   } catch { /* ignore */ }
 }
 
@@ -140,9 +127,8 @@ async function loadAsset(id: number) {
       status: a.status,
     }
     logs.value = logsRes.data
-    if (!isAdmin.value && props.mode === 'view') {
-      resolveNames(a.deptId, a.userId)
-    }
+    assetDeptName.value = a.deptName || ''
+    assetUserName.value = a.userName || ''
   } catch {
     // toast already
   } finally {
@@ -197,8 +183,8 @@ async function handleSubmit() {
         quantity: form.value.quantity,
         unit: form.value.unit || undefined,
         regionId: form.value.regionId,
-        deptId: form.value.deptId ?? null,
-        userId: form.value.userId ?? null,
+        deptId: form.value.deptId || null,
+        userId: form.value.userId || null,
         status: form.value.status || undefined,
         location: form.value.location || undefined,
         purchaseDate: form.value.purchaseDate || undefined,
@@ -333,10 +319,10 @@ const logActionLabel: Record<string, string> = {
         <el-col :span="isTenantAdmin ? 8 : 12">
           <el-form-item label="所属部门">
             <template v-if="isDisabled && !isAdmin">
-              <el-input disabled :model-value="resolvedDeptName || (form.deptId ? String(form.deptId) : '-')" />
+              <el-input disabled :model-value="assetDeptName || (form.deptId ? String(form.deptId) : '-')" />
             </template>
             <template v-else>
-              <el-select v-model="form.deptId" style="width: 100%" placeholder="选择部门" clearable filterable>
+              <el-select :model-value="form.deptId" @update:model-value="(v: any) => form.deptId = v || undefined" @clear="form.deptId = undefined" style="width: 100%" placeholder="选择部门" clearable filterable>
                 <el-option v-for="d in deptOptions" :key="d.id" :label="d.name" :value="d.id" />
               </el-select>
             </template>
@@ -345,10 +331,10 @@ const logActionLabel: Record<string, string> = {
         <el-col :span="isTenantAdmin ? 8 : 12">
           <el-form-item label="领用人">
             <template v-if="isDisabled && !isAdmin">
-              <el-input disabled :model-value="resolvedUserName || (form.userId ? String(form.userId) : '-')" />
+              <el-input disabled :model-value="assetUserName || (form.userId ? String(form.userId) : '-')" />
             </template>
             <template v-else>
-              <el-select v-model="form.userId" style="width: 100%" placeholder="选择领用人" clearable filterable>
+              <el-select :model-value="form.userId" @update:model-value="(v: any) => form.userId = v || undefined" @clear="form.userId = undefined" style="width: 100%" placeholder="选择领用人" clearable filterable>
                 <el-option v-for="u in userOptions" :key="u.id" :label="`${u.realName} (${u.username})`" :value="u.id" />
               </el-select>
             </template>

@@ -45,8 +45,11 @@ export interface AssetItem {
   id: number
   tenantId: number
   regionId: number
+  regionName: string
   deptId: number | null
+  deptName: string
   userId: number | null
+  userName: string
   name: string
   code: string
   category: string
@@ -74,6 +77,7 @@ export interface AssetQueryParams {
   deptId?: number
   userId?: number
   keyword?: string
+  scope?: string
 }
 
 export interface AssetCreateRequest {

@@ -9,7 +9,6 @@ export interface AssetApplicationItem {
   type: string
   reason: string
   status: string
-  quantity: number
   approverId: number | null
   approverName: string | null
   remark: string | null
@@ -21,16 +20,12 @@ export interface AssetApplicationCreateRequest {
   assetId: number
   reason: string
   type?: string
-  quantity?: number
   targetUserId?: number
   targetDeptId?: number
 }
 
 export interface AssetApplicationUpdateRequest {
   reason?: string
-  quantity?: number
-  targetUserId?: number
-  targetDeptId?: number
 }
 
 export interface AssetApplicationLog {

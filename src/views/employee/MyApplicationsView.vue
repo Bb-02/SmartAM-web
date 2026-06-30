@@ -20,7 +20,7 @@ const detailItem = ref<AssetApplicationItem | null>(null)
 
 // 编辑状态
 const editing = ref(false)
-const editForm = reactive({ reason: '', quantity: 1 })
+const editForm = reactive({ reason: '' })
 
 async function fetchData() {
   loading.value = true
@@ -43,7 +43,6 @@ function openDetail(row: AssetApplicationItem) {
 function startEdit() {
   if (!detailItem.value) return
   editForm.reason = detailItem.value.reason
-  editForm.quantity = detailItem.value.quantity || 1
   editing.value = true
 }
 
@@ -54,13 +53,9 @@ function cancelEdit() {
 async function handleSaveEdit() {
   if (!detailItem.value) return
   try {
-    await updateApplication(detailItem.value.id, {
-      reason: editForm.reason || undefined,
-      quantity: editForm.quantity,
-    })
+    await updateApplication(detailItem.value.id, { reason: editForm.reason || undefined })
     ElMessage.success('修改成功')
     detailItem.value.reason = editForm.reason
-    detailItem.value.quantity = editForm.quantity
     editing.value = false
   } catch { /* toast */ }
 }
@@ -112,7 +107,6 @@ onMounted(() => { fetchData() })
           <div class="card-body">
             <div class="card-title">{{ row.assetName || '未知资产' }}</div>
             <div class="card-meta">
-              <span v-if="row.quantity">数量 {{ row.quantity }} 件 · </span>
               <span>{{ formatTime(row.createdAt) }}</span>
             </div>
           </div>
@@ -153,10 +147,6 @@ onMounted(() => { fetchData() })
         <!-- 非编辑模式 -->
         <template v-if="!editing">
           <div class="dt-section">
-            <div class="dt-label">申领数量</div>
-            <div class="dt-value">{{ detailItem.quantity || 1 }} 件</div>
-          </div>
-          <div class="dt-section">
             <div class="dt-label">申领原因</div>
             <div class="dt-value">{{ detailItem.reason || '无' }}</div>
           </div>
@@ -170,9 +160,6 @@ onMounted(() => { fetchData() })
         <!-- 编辑模式（仅 PENDING） -->
         <template v-else>
           <el-form label-position="top">
-            <el-form-item label="申领数量">
-              <el-input-number v-model="editForm.quantity" :min="1" style="width: 200px" />
-            </el-form-item>
             <el-form-item label="申领原因">
               <el-input v-model="editForm.reason" type="textarea" :rows="3" />
             </el-form-item>

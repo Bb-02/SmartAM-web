@@ -11,7 +11,9 @@ export interface LoginResponseData {
   role: string
   realName: string
   companyName: string
+  regionId: number
   regionName: string
+  deptId: number | null
 }
 
 export interface RegisterRequest {
@@ -36,5 +38,7 @@ export interface UserInfo {
   role: string
   realName: string
   companyName: string
+  regionId: number
   regionName: string
+  deptId: number | null
 }

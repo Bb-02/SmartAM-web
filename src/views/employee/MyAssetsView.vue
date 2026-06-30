@@ -12,8 +12,10 @@ const activeTab = ref('all')
 const allAssets = ref<AssetItem[]>([])
 
 const myAssets = computed(() => allAssets.value.filter((a) => a.userId === authStore.userId))
-const deptAssets = computed(() => allAssets.value)
+const deptAssets = computed(() => allAssets.value.filter((a) => a.deptId === authStore.deptId))
 const displayAssets = computed(() => (activeTab.value === 'mine' ? myAssets.value : deptAssets.value))
+
+const pageTitle = computed(() => (activeTab.value === 'mine' ? '我的资产' : '部门资产'))
 
 const statusColor: Record<string, string> = {
   IN_STORAGE: '#94a3b8', IN_USE: '#16a34a', IN_REPAIR: '#d97706', SCRAPPED: '#dc2626',
@@ -41,7 +43,7 @@ onMounted(() => { fetchData() })
   <div class="my-assets-page">
     <div class="page-header">
       <div class="header-left">
-        <h2>部门资产</h2>
+        <h2>{{ pageTitle }}</h2>
         <span class="header-count">{{ displayAssets.length }} 件资产</span>
       </div>
     </div>

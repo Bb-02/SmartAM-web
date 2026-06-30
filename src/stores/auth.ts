@@ -11,7 +11,9 @@ export const useAuthStore = defineStore('auth', () => {
   const role = ref('')
   const realName = ref('')
   const companyName = ref('')
+  const regionId = ref<number | null>(null)
   const regionName = ref('')
+  const deptId = ref<number | null>(null)
 
   const isLoggedIn = computed(() => !!token.value)
 
@@ -22,7 +24,9 @@ export const useAuthStore = defineStore('auth', () => {
     role.value = info.role
     realName.value = info.realName
     companyName.value = info.companyName
+    regionId.value = info.regionId
     regionName.value = info.regionName
+    deptId.value = info.deptId
 
     setStorage('token', t)
     setStorage('user', info)
@@ -38,7 +42,9 @@ export const useAuthStore = defineStore('auth', () => {
       role.value = savedUser.role
       realName.value = savedUser.realName
       companyName.value = savedUser.companyName || ''
+      regionId.value = savedUser.regionId
       regionName.value = savedUser.regionName || ''
+      deptId.value = savedUser.deptId ?? null
     }
   }
 
@@ -71,7 +77,9 @@ export const useAuthStore = defineStore('auth', () => {
     role,
     realName,
     companyName,
+    regionId,
     regionName,
+    deptId,
     isLoggedIn,
     hydrateFromStorage,
     login,
