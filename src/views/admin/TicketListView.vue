@@ -159,6 +159,7 @@ onMounted(() => { fetchData() })
               <el-descriptions-item label="申请人">{{ selected.applicantName }}</el-descriptions-item>
               <el-descriptions-item label="申请类型">{{ typeLabel[selected.type] || selected.type }}</el-descriptions-item>
               <el-descriptions-item label="资产 ID">{{ selected.assetId }}</el-descriptions-item>
+              <el-descriptions-item v-if="selected.quantity" label="申领数量">{{ selected.quantity }} 件</el-descriptions-item>
               <el-descriptions-item label="提交时间">{{ formatTime(selected.createdAt) }}</el-descriptions-item>
               <el-descriptions-item v-if="selected.approverName" label="审批人">{{ selected.approverName }}</el-descriptions-item>
               <el-descriptions-item v-if="selected.updatedAt !== selected.createdAt" label="处理时间">{{ formatTime(selected.updatedAt) }}</el-descriptions-item>

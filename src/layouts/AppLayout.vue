@@ -35,13 +35,8 @@ async function handleReadOne(msg: MessageItem) {
   try {
     await markRead(msg.id)
     unreadCount.value = Math.max(0, unreadCount.value - 1)
-    if (msg.relatedId) {
-      // 根据类型跳转
-      if (msg.type === 'WORK_ORDER') router.push('/employee/orders')
-      else if (msg.type === 'APPLICATION') router.push('/employee/apply')
-      else if (msg.type === 'ASSET') router.push('/employee/assets')
-    }
   } catch { /* ignore */ }
+  router.push('/messages')
 }
 
 async function handleReadAll() {
@@ -249,6 +244,10 @@ function handleCommand(command: string) {
 
 .bell-badge {
   cursor: pointer;
+}
+.bell-badge :deep(.el-badge__content) {
+  top: 2px;
+  right: 8px;
 }
 .bell-icon {
   font-size: 20px;

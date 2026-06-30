@@ -4,8 +4,8 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { createAsset, updateAsset, getAsset, getAssetLogs } from '@/api/assets'
 import { getRegionList } from '@/api/regions'
-import { getDepartmentList } from '@/api/departments'
-import { getUserList } from '@/api/users'
+import { getDepartmentList, getDepartment } from '@/api/departments'
+import { getUserList, getUser } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
 import { categoryOptions, statusOptions as allStatusOptions, categoryLabel } from '@/types/asset'
 import type { AssetItem, AssetLog, AssetCategory } from '@/types/asset'
@@ -28,12 +28,14 @@ const authStore = useAuthStore()
 const isTenantAdmin = computed(() => authStore.role === 'ADMIN_TENANT')
 const isAdmin = computed(() => authStore.role === 'ADMIN_TENANT' || authStore.role === 'ADMIN_REGION')
 
-// 下拉选项
 const regionOptions = ref<RegionItem[]>([])
 const deptOptions = ref<DepartmentItem[]>([])
 const userOptions = ref<UserItem[]>([])
 
-// 状态选项（去掉"全部状态"）
+// 非管理员 view 模式下单独解析的名称
+const resolvedDeptName = ref('')
+const resolvedUserName = ref('')
+
 const statusOptions = allStatusOptions.filter((o) => o.value !== '')
 
 const formRef = ref<FormInstance>()
@@ -94,11 +96,23 @@ async function loadOptions() {
     const [regionRes, deptRes, userRes] = await Promise.all([
       getRegionList(),
       getDepartmentList(),
-      getUserList(),
+      getUserList({ role: 'EMPLOYEE' }),
     ])
     regionOptions.value = regionRes.data.records
     deptOptions.value = deptRes.data.records
     userOptions.value = userRes.data.records
+  } catch { /* ignore */ }
+}
+
+async function resolveNames(deptId: number | null | undefined, userId: number | null | undefined) {
+  resolvedDeptName.value = ''
+  resolvedUserName.value = ''
+  if (!deptId && !userId) return
+  try {
+    const tasks: Promise<any>[] = []
+    if (deptId) tasks.push(getDepartment(deptId).then((r) => { resolvedDeptName.value = r.data.name }).catch(() => {}))
+    if (userId) tasks.push(getUser(userId).then((r) => { resolvedUserName.value = r.data.realName }).catch(() => {}))
+    await Promise.all(tasks)
   } catch { /* ignore */ }
 }
 
@@ -126,6 +140,9 @@ async function loadAsset(id: number) {
       status: a.status,
     }
     logs.value = logsRes.data
+    if (!isAdmin.value && props.mode === 'view') {
+      resolveNames(a.deptId, a.userId)
+    }
   } catch {
     // toast already
   } finally {
@@ -180,8 +197,8 @@ async function handleSubmit() {
         quantity: form.value.quantity,
         unit: form.value.unit || undefined,
         regionId: form.value.regionId,
-        deptId: form.value.deptId,
-        userId: form.value.userId,
+        deptId: form.value.deptId ?? null,
+        userId: form.value.userId ?? null,
         status: form.value.status || undefined,
         location: form.value.location || undefined,
         purchaseDate: form.value.purchaseDate || undefined,
@@ -299,42 +316,42 @@ const logActionLabel: Record<string, string> = {
         </el-col>
       </el-row>
 
-      <!-- 归属（下拉选择，显示名字） -->
+      <!-- 归属 -->
       <el-row :gutter="16">
         <el-col v-if="isTenantAdmin" :span="8">
           <el-form-item label="所属分区">
-            <el-select v-model="form.regionId" style="width: 100%" placeholder="选择分区" clearable filterable>
-              <el-option
-                v-for="r in regionOptions"
-                :key="r.id"
-                :label="`${r.name} (${r.code})`"
-                :value="r.id"
-              />
-            </el-select>
+            <template v-if="isDisabled && !isAdmin">
+              <el-input disabled :model-value="form.regionId ? String(form.regionId) : '-'" />
+            </template>
+            <template v-else>
+              <el-select v-model="form.regionId" style="width: 100%" placeholder="选择分区" clearable filterable>
+                <el-option v-for="r in regionOptions" :key="r.id" :label="`${r.name} (${r.code})`" :value="r.id" />
+              </el-select>
+            </template>
           </el-form-item>
         </el-col>
         <el-col :span="isTenantAdmin ? 8 : 12">
           <el-form-item label="所属部门">
-            <el-select v-model="form.deptId" style="width: 100%" placeholder="选择部门" clearable filterable>
-              <el-option
-                v-for="d in deptOptions"
-                :key="d.id"
-                :label="d.name"
-                :value="d.id"
-              />
-            </el-select>
+            <template v-if="isDisabled && !isAdmin">
+              <el-input disabled :model-value="resolvedDeptName || (form.deptId ? String(form.deptId) : '-')" />
+            </template>
+            <template v-else>
+              <el-select v-model="form.deptId" style="width: 100%" placeholder="选择部门" clearable filterable>
+                <el-option v-for="d in deptOptions" :key="d.id" :label="d.name" :value="d.id" />
+              </el-select>
+            </template>
           </el-form-item>
         </el-col>
         <el-col :span="isTenantAdmin ? 8 : 12">
           <el-form-item label="领用人">
-            <el-select v-model="form.userId" style="width: 100%" placeholder="选择领用人" clearable filterable>
-              <el-option
-                v-for="u in userOptions"
-                :key="u.id"
-                :label="`${u.realName} (${u.username})`"
-                :value="u.id"
-              />
-            </el-select>
+            <template v-if="isDisabled && !isAdmin">
+              <el-input disabled :model-value="resolvedUserName || (form.userId ? String(form.userId) : '-')" />
+            </template>
+            <template v-else>
+              <el-select v-model="form.userId" style="width: 100%" placeholder="选择领用人" clearable filterable>
+                <el-option v-for="u in userOptions" :key="u.id" :label="`${u.realName} (${u.username})`" :value="u.id" />
+              </el-select>
+            </template>
           </el-form-item>
         </el-col>
       </el-row>

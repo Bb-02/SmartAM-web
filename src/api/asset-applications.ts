@@ -1,6 +1,6 @@
 import http from './index'
 import type { ApiResponse, PageResult } from '@/types/api'
-import type { AssetApplicationItem, AssetApplicationCreateRequest, AssetApplicationLog } from '@/types/asset-application'
+import type { AssetApplicationItem, AssetApplicationCreateRequest, AssetApplicationUpdateRequest, AssetApplicationLog } from '@/types/asset-application'
 
 export function getApplicationList(params?: {
   page?: number
@@ -30,6 +30,10 @@ export function rejectApplication(id: number, remark?: string): Promise<ApiRespo
 
 export function cancelApplication(id: number): Promise<ApiResponse<AssetApplicationItem>> {
   return http.post(`/asset-applications/${id}/cancel`).then((res) => res.data)
+}
+
+export function updateApplication(id: number, data: AssetApplicationUpdateRequest): Promise<ApiResponse<AssetApplicationItem>> {
+  return http.put(`/asset-applications/${id}`, data).then((res) => res.data)
 }
 
 export function getApplicationLogs(id: number): Promise<ApiResponse<AssetApplicationLog[]>> {

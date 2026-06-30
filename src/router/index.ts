@@ -72,10 +72,11 @@ const router = createRouter({
       children: [
         { path: '', redirect: '/employee/dashboard' },
         { path: 'dashboard', name: 'EmployeeDashboard', component: () => import('@/views/employee/DashboardView.vue'), meta: { title: '工作台' } },
-        { path: 'assets', name: 'MyAssets', component: () => import('@/views/employee/MyAssetsView.vue'), meta: { title: '我的资产' } },
+        { path: 'assets', name: 'MyAssets', component: () => import('@/views/employee/MyAssetsView.vue'), meta: { title: '部门资产' } },
         { path: 'orders', name: 'MyWorkOrders', component: () => import('@/views/employee/MyOrdersView.vue'), meta: { title: '我的工单' } },
         { path: 'repair', name: 'CreateRepair', component: () => import('@/views/employee/CreateRepairView.vue'), meta: { title: '发起报修' } },
         { path: 'apply', name: 'CreateApply', component: () => import('@/views/employee/CreateApplyView.vue'), meta: { title: '发起申领' } },
+        { path: 'my-applies', name: 'MyApplies', component: () => import('@/views/employee/MyApplicationsView.vue'), meta: { title: '我的申领' } },
       ],
     },
 

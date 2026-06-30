@@ -11,6 +11,8 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const listData = ref<MessageItem[]>([])
 const pagination = reactive({ current: 1, size: 20, total: 0 })
+const detailVisible = ref(false)
+const detailMsg = ref<MessageItem | null>(null)
 
 const typeLabel: Record<string, string> = { WORK_ORDER: '工单', APPLICATION: '申领', ASSET: '资产' }
 
@@ -24,12 +26,12 @@ async function fetchData() {
   finally { loading.value = false }
 }
 
-async function handleRead(msg: MessageItem) {
-  if (msg.isRead === 1) return
-  try {
-    await markRead(msg.id)
-    msg.isRead = 1
-  } catch { /* ignore */ }
+function openDetail(msg: MessageItem) {
+  detailMsg.value = msg
+  detailVisible.value = true
+  if (msg.isRead === 0) {
+    markRead(msg.id).then(() => { msg.isRead = 1 }).catch(() => {})
+  }
 }
 
 async function handleReadAll() {
@@ -41,8 +43,6 @@ async function handleReadAll() {
 
 function handlePageChange(p: number) { pagination.current = p; fetchData() }
 function formatTime(iso: string) { return iso ? iso.slice(0, 16).replace('T', ' ') : '-' }
-
-function goBack() { router.back() }
 
 onMounted(() => { fetchData() })
 </script>
@@ -60,7 +60,7 @@ onMounted(() => { fetchData() })
     </div>
 
     <div class="msg-list" v-loading="loading">
-      <div v-for="m in listData" :key="m.id" class="msg-card" :class="{ unread: m.isRead === 0 }" @click="handleRead(m)">
+      <div v-for="m in listData" :key="m.id" class="msg-card" :class="{ unread: m.isRead === 0 }" @click="openDetail(m)">
         <div class="msg-head">
           <span class="msg-type-tag">{{ typeLabel[m.type] || m.type }}</span>
           <span class="msg-dot" v-if="m.isRead === 0"></span>
@@ -75,6 +75,18 @@ onMounted(() => { fetchData() })
     <div class="msg-pagination" v-if="pagination.total > 0">
       <el-pagination v-model:current-page="pagination.current" :page-size="pagination.size" :total="pagination.total" layout="prev, pager, next" small @current-change="handlePageChange" />
     </div>
+
+    <!-- 消息详情对话框 -->
+    <el-dialog v-model="detailVisible" title="消息详情" width="520px" :close-on-click-modal="true">
+      <template v-if="detailMsg">
+        <div class="detail-type">
+          <span class="dt-tag">{{ typeLabel[detailMsg.type] || detailMsg.type }}</span>
+          <span class="dt-time">{{ formatTime(detailMsg.createdAt) }}</span>
+        </div>
+        <h3 class="dt-title">{{ detailMsg.title }}</h3>
+        <div class="dt-body">{{ detailMsg.content || '暂无详细内容' }}</div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -113,4 +125,11 @@ onMounted(() => { fetchData() })
 .msg-content { font-size: 13px; color: #64748b; margin-top: 6px; line-height: 1.6; }
 
 .msg-pagination { display: flex; justify-content: center; margin-top: 24px; }
+
+/* 详情对话框 */
+.detail-type { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.dt-tag { font-size: 12px; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 3px 10px; border-radius: 4px; }
+.dt-time { font-size: 13px; color: #94a3b8; }
+.dt-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 20px; line-height: 1.5; }
+.dt-body { font-size: 14px; color: #475569; line-height: 1.8; white-space: pre-wrap; background: #f8fafc; border-radius: 8px; padding: 16px 20px; }
 </style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { createApplication } from '@/api/asset-applications'
+import { getAssetList } from '@/api/assets'
 import { useAuthStore } from '@/stores/auth'
 import { categoryLabel } from '@/types/asset'
 import type { AssetItem, AssetCategory } from '@/types/asset'
@@ -12,9 +13,19 @@ const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const availableAssets = ref<AssetItem[]>([])
 
+// 仅展示在库且未分配领用人的资产
+const applyAssets = computed(() =>
+  availableAssets.value.filter((a) => a.userId == null)
+)
+
+const selectedAsset = computed(() =>
+  availableAssets.value.find((a) => a.id === form.assetId) ?? null
+)
+
 const form = reactive({
   assetId: undefined as number | undefined,
   type: 'APPLY' as string,
+  quantity: 1,
   reason: '',
 })
 
@@ -25,10 +36,8 @@ const rules: FormRules = {
 
 async function loadAvailableAssets() {
   try {
-    const res = await getAssetList({ page: 1, size: 500 })
-    availableAssets.value = res.data.records.filter(
-      (a) => a.status === 'IN_STORAGE'
-    )
+    const res = await getAssetList({ page: 1, size: 500, status: 'IN_STORAGE' })
+    availableAssets.value = res.data.records
   } catch { /* ignore */ }
 }
 
@@ -36,15 +45,32 @@ function getCategoryLabel(cat: string) {
   return categoryLabel[cat as AssetCategory] || cat
 }
 
+function onAssetChange() {
+  form.quantity = 1
+}
+
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
+  const asset = selectedAsset.value
+  if (!asset) return
+  if (form.quantity > asset.quantity) {
+    ElMessage.warning(`库存不足，当前可用 ${asset.quantity} 件`)
+    return
+  }
+
   submitting.value = true
   try {
-    await createApplication({ assetId: form.assetId!, reason: form.reason, type: form.type })
+    await createApplication({
+      assetId: form.assetId!,
+      reason: form.reason,
+      type: form.type,
+      quantity: form.quantity,
+    })
     ElMessage.success('申领已提交，等待管理员审批')
     form.assetId = undefined
+    form.quantity = 1
     form.reason = ''
     form.type = 'APPLY'
     formRef.value?.resetFields()
@@ -68,14 +94,24 @@ onMounted(() => { loadAvailableAssets() })
     <div class="form-card">
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="form-body">
         <el-form-item label="选择资产" prop="assetId">
-          <el-select v-model="form.assetId" style="width: 100%" placeholder="选择要申领的资产" clearable filterable size="large">
+          <el-select v-model="form.assetId" style="width: 100%" placeholder="选择要申领的资产" clearable filterable size="large" @change="onAssetChange">
             <el-option
-              v-for="a in availableAssets"
+              v-for="a in applyAssets"
               :key="a.id"
-              :label="`${a.name} (${a.code}) — ${getCategoryLabel(a.category)}`"
+              :label="`${a.name} (${a.code}) — ${getCategoryLabel(a.category)} — 库存 ${a.quantity} 件`"
               :value="a.id"
             />
           </el-select>
+        </el-form-item>
+
+        <el-form-item v-if="selectedAsset" label="申领数量">
+          <el-input-number
+            v-model="form.quantity"
+            :min="1"
+            :max="selectedAsset.quantity"
+            style="width: 200px"
+          />
+          <span class="form-hint">当前库存 {{ selectedAsset.quantity }} 件</span>
         </el-form-item>
 
         <el-form-item label="申领原因" prop="reason">
@@ -91,13 +127,13 @@ onMounted(() => { loadAvailableAssets() })
     </div>
 
     <!-- 可申领资产预览 -->
-    <div class="section-title">可申领资产</div>
-    <div class="asset-grid" v-if="availableAssets.length > 0">
-      <div v-for="a in availableAssets" :key="a.id" class="asset-card" @click="form.assetId = a.id">
+    <div class="section-title">可申领资产（共 {{ applyAssets.length }} 件）</div>
+    <div class="asset-grid" v-if="applyAssets.length > 0">
+      <div v-for="a in applyAssets" :key="a.id" class="asset-card" :class="{ selected: form.assetId === a.id }" @click="form.assetId = a.id; onAssetChange()">
         <div class="card-accent" :class="{ selected: form.assetId === a.id }"></div>
         <div class="card-inner">
           <span class="card-name">{{ a.name }}</span>
-          <span class="card-meta">{{ a.code }} · {{ getCategoryLabel(a.category) }}</span>
+          <span class="card-meta">{{ a.code }} · {{ getCategoryLabel(a.category) }} · 库存 {{ a.quantity }} 件</span>
         </div>
       </div>
     </div>
@@ -163,6 +199,7 @@ onMounted(() => { loadAvailableAssets() })
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .asset-card:hover { border-color: #bfdbfe; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.asset-card.selected { border-color: #409eff; }
 
 .card-accent {
   width: 4px;
