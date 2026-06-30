@@ -107,7 +107,10 @@ async function handleLogin() {
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f2440 100%);
+  background:
+    radial-gradient(ellipse at 20% 50%, #264f7a 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 30%, #1e3a5f 0%, transparent 50%),
+    linear-gradient(135deg, #0f2440 0%, #1a3252 50%, #0c1c30 100%);
 }
 
 .auth-card {
